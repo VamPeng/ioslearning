@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Objective-C 知识树</title>
+  <style>
+    :root{
+      --bg:#f4f6fb; --card:#fff; --ink:#101828; --muted:#667085; --line:#e4e7ec;
+      --must:#ef4444; --should:#f59e0b; --later:#98a2b3; --blue:#2563eb;
+      --radius:16px; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.65}
+    .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+    header{background:linear-gradient(135deg,#111827,#1f2937);color:#fff;padding:50px 0 42px}
+    .crumb{font-family:var(--mono);font-size:13px;color:#9ca3af;margin-bottom:12px}
+    h1{font-size:42px;line-height:1.08;margin:0 0 12px;letter-spacing:-.03em}.lead{color:#d1d5db;max-width:680px;margin:0}
+    main{padding:30px 0 70px}.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}.leg{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;color:#475467}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}.must{background:var(--must)}.should{background:var(--should)}.later{background:var(--later)}
+    .group{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;overflow:hidden;box-shadow:0 8px 24px rgba(16,24,40,.04)}
+    .ghead{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px}.ghead h2{margin:0;font-size:20px}.ghead span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+    .topic{padding:16px 20px;border-bottom:1px solid var(--line)}.topic:last-child{border-bottom:none}.row{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}.badge{font-family:var(--mono);font-size:11px;font-weight:800;border-radius:7px;padding:3px 8px}.b1{background:#fef2f2;color:#b91c1c}.b2{background:#fffbeb;color:#92400e}.b3{background:#f2f4f7;color:#667085}
+    a.title{font-weight:800;color:var(--ink);text-decoration:none}.en{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:4px;font-weight:400}.note{flex-basis:100%;font-size:14px;color:var(--muted);margin-top:4px}
+    .subs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.subs a{border:1px solid #dbeafe;background:#eff6ff;color:var(--blue);text-decoration:none;border-radius:9px;padding:5px 9px;font-size:13px;font-weight:600}
+    .path{background:#fff;border:1px dashed #cbd5e1;border-radius:14px;padding:14px 16px;color:#475467;font-size:14px;margin-bottom:20px}.path code{font-family:var(--mono);color:#111827}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="crumb"><a href="../index.html" style="color:#bfdbfe;text-decoration:none">iOS Learning</a> / Objective-C</div>
+    <h1>Objective-C 知识树</h1>
+    <p class="lead">HTML 只承载树干和树枝：学习顺序、优先级、节点关系、正文入口。具体知识内容放在 Markdown 中。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="legend">
+    <span class="leg"><span class="dot must"></span>必学：读代码必须掌握</span>
+    <span class="leg"><span class="dot should"></span>建议学：老项目维护常见</span>
+    <span class="leg"><span class="dot later"></span>用到再学：深入或专项能力</span>
+  </div>
+
+  <div class="path">当前路径：<code>iOS → Objective-C → 基础语法</code></div>
+
+  <section class="group">
+    <div class="ghead"><h2>Objective-C 主干</h2><span>Objective-C Trunk</span></div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b3">用到再学</span>
+        <a class="title" href="../docs/objective-c/00-overview.md">语言定位 <span class="en">Language Positioning</span></a>
+        <div class="note">先知道 OC 在 iOS 体系里的位置：老项目、UIKit、Runtime、Swift 混编。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b1">必学</span>
+        <a class="title" href="../docs/objective-c/01-basic-syntax.md">基础语法 <span class="en">Basic Syntax</span></a>
+        <div class="note">读懂 OC 代码的最低门槛：文件结构、对象、消息发送、属性、Foundation 常用类型。</div>
+      </div>
+      <div class="subs">
+        <a href="../docs/objective-c/01-basic-syntax.md#1-学习目标">学习目标</a>
+        <a href="../docs/objective-c/01-basic-syntax.md#2-文件结构hm">.h / .m</a>
+        <a href="../docs/objective-c/01-basic-syntax.md#4-对象与指针">对象与指针</a>
+        <a href="../docs/objective-c/01-basic-syntax.md#5-消息发送语法">消息发送</a>
+        <a href="../docs/objective-c/01-basic-syntax.md#7-property-属性">property</a>
+        <a href="../docs/objective-c/01-basic-syntax.md#10-foundation-常用类型">Foundation 类型</a>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b1">必学</span>
+        <a class="title" href="#">类与对象 <span class="en">Class & Object</span></a>
+        <div class="note">下一节点：@interface、@implementation、继承、初始化方法、self/super。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b1">必学</span>
+        <a class="title" href="#">属性与方法 <span class="en">Property & Method</span></a>
+        <div class="note">下一阶段：strong / weak / copy / assign、getter / setter、类方法与实例方法。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b1">必学</span>
+        <a class="title" href="#">内存管理 ARC <span class="en">ARC</span></a>
+        <div class="note">读懂 retain cycle、weak delegate、Block 捕获 self 的基础。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b2">建议学</span>
+        <a class="title" href="#">Block <span class="en">Block</span></a>
+        <div class="note">OC 中的闭包，常见于回调、异步、UIKit API、链式封装。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b2">建议学</span>
+        <a class="title" href="#">Category / Extension <span class="en">Category / Extension</span></a>
+        <div class="note">老项目常用扩展方式，也是 Runtime 相关问题的入口。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b2">建议学</span>
+        <a class="title" href="#">Protocol / Delegate <span class="en">Protocol / Delegate</span></a>
+        <div class="note">UIKit 和老项目最常见的解耦通信方式。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b3">用到再学</span>
+        <a class="title" href="#">Swift 互操作 <span class="en">Swift Interop</span></a>
+        <div class="note">当你需要读混编项目、桥接头、暴露 Swift 给 OC 时再系统学习。</div>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
