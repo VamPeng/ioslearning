@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS 开发路线图 · 按优先级标注 · 基于 roadmap.sh</title>
+<style>
+  :root{
+    --bg:#eef1f6; --surface:#fff; --ink:#14141f; --muted:#5b6575; --faint:#8a93a3;
+    --line:#e3e7ef; --swift:#f05138; --swift-deep:#d23c22; --blue:#2563eb;
+    --editor:#0d1020; --editor-2:#161d33; --comment:#7ec699;
+    --t1:#f05138; --t1-bg:#fff4f1; --t1-line:#f7cabd;
+    --t2:#e0a112; --t2-bg:#fffaf0; --t2-line:#f3e0b0;
+    --t3:#9aa3b2; --t3-bg:#f5f7fa; --t3-line:#e3e7ef;
+    --radius:16px; --maxw:920px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--ui);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:100;background:linear-gradient(90deg,var(--swift),#ff8a5c);transition:width .08s linear}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  /* hero */
+  .hero{background:radial-gradient(120% 90% at 85% -10%,rgba(240,81,56,.22),transparent 55%),linear-gradient(160deg,var(--editor),var(--editor-2));color:#fff;padding:64px 0 52px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:100% 30px;opacity:.5}
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{font-family:var(--mono);font-size:13px;color:var(--comment);margin-bottom:18px}
+  .hero h1{font-size:clamp(30px,5.4vw,50px);line-height:1.05;font-weight:800;letter-spacing:-.02em;margin-bottom:16px}
+  .hero h1 .accent{color:var(--swift)}
+  .lede{font-size:clamp(15px,2.3vw,18px);color:#c4cbdb;max-width:62ch;margin-bottom:14px}
+  .src{font-family:var(--mono);font-size:12.5px;color:var(--faint)}
+  .src a{color:#a9c8ff;text-decoration:none}
+
+  /* legend */
+  .legend{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:30px}
+  .leg{border-radius:12px;padding:13px 15px;border:1px solid}
+  .leg.l1{background:rgba(240,81,56,.12);border-color:rgba(240,81,56,.35)}
+  .leg.l2{background:rgba(224,161,18,.12);border-color:rgba(224,161,18,.35)}
+  .leg.l3{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.16)}
+  .leg .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .leg.l1 .dot{background:var(--swift)} .leg.l2 .dot{background:#f0b429} .leg.l3 .dot{background:#9aa3b2}
+  .leg b{color:#fff;font-size:14px} .leg p{color:#aeb6c6;font-size:12.5px;margin-top:3px}
+
+  main{padding:0 0 80px}
+  section{padding:30px 0}
+  .section-label{font-family:var(--mono);font-size:12px;color:var(--swift);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+  h2{font-size:clamp(20px,3.2vw,26px);font-weight:800;letter-spacing:-.01em;margin-bottom:10px}
+  p.note{color:var(--muted);max-width:64ch;font-size:14.5px}
+
+  /* trunk strip */
+  .trunk{background:var(--surface);border:1px solid var(--t1-line);border-radius:var(--radius);padding:22px 24px;margin-top:8px}
+  .trunk .head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .trunk .head .dot{width:11px;height:11px;border-radius:50%;background:var(--swift)}
+  .trunk .head b{font-size:15px}
+  .trunk ol{list-style:none;display:flex;flex-wrap:wrap;gap:8px;counter-reset:s}
+  .trunk li{counter-increment:s;display:flex;align-items:center;gap:7px;background:var(--t1-bg);border:1px solid var(--t1-line);border-radius:10px;padding:7px 12px;font-size:13.5px;font-weight:600;color:var(--swift-deep)}
+  .trunk li::before{content:counter(s);font-family:var(--mono);font-size:11px;background:var(--swift);color:#fff;width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex:none}
+  .trunk .arrow{color:var(--faint);align-self:center;font-size:12px}
+
+  /* roadmap groups */
+  .group{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 8px 14px;margin-bottom:14px;overflow:hidden}
+  .group>.ghead{display:flex;align-items:baseline;gap:10px;padding:14px 16px 12px}
+  .group>.ghead h3{font-size:17px;font-weight:700}
+  .group>.ghead .en{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+  .topic{border-top:1px solid var(--line);padding:14px 16px}
+  .topic:first-of-type{border-top:1px solid var(--line)}
+  .trow{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .badge{flex:none;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;line-height:1.4;white-space:nowrap}
+  .b1{color:var(--swift-deep);background:var(--t1-bg);border:1px solid var(--t1-line)}
+  .b2{color:#9a6c00;background:var(--t2-bg);border:1px solid var(--t2-line)}
+  .b3{color:#6b7484;background:var(--t3-bg);border:1px solid var(--t3-line)}
+  .tname{font-weight:700;font-size:15.5px}
+  .tname.dim{font-weight:600;color:var(--muted)}
+  .ten{font-family:var(--mono);font-size:12px;color:var(--faint);font-weight:400;margin-left:2px}
+  .tnote{flex-basis:100%;font-size:13px;color:var(--muted);margin-top:4px;padding-left:0}
+  .mod{display:inline-block;font-family:var(--mono);font-size:10.5px;color:var(--blue);background:#eef4ff;border:1px solid #cdddfb;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+
+  .subs{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .sub{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border-radius:8px;padding:4px 9px;border:1px solid}
+  .sub .sdot{width:7px;height:7px;border-radius:50%;flex:none}
+  .sub.s1{background:var(--t1-bg);border-color:var(--t1-line);color:#5a2417} .sub.s1 .sdot{background:var(--swift)}
+  .sub.s2{background:var(--t2-bg);border-color:var(--t2-line);color:#6e5212} .sub.s2 .sdot{background:#f0b429}
+  .sub.s3{background:var(--t3-bg);border-color:var(--t3-line);color:#7b8494} .sub.s3 .sdot{background:#aab2c0}
+  .sub .se{font-family:var(--mono);font-size:11px;opacity:.65}
+
+  .tipbox{background:#fff6f3;border:1px solid var(--t1-line);border-left:3px solid var(--swift);border-radius:0 10px 10px 0;padding:12px 15px;margin-top:14px;font-size:13.5px;color:#4a2418}
+  .tipbox b{color:var(--swift-deep)}
+
+  footer{text-align:center;color:var(--faint);font-size:13px;padding:30px 0 10px}
+  footer a{color:var(--swift-deep);text-decoration:none}
+
+  @media(max-width:680px){
+    .legend{grid-template-columns:1fr}
+    .hero{padding:50px 0 40px}
+    .group>.ghead,.topic{padding-left:14px;padding-right:14px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}
+  .reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">// 按「优先级」重排 · 中英对照 · 解决「分不清主干和必学项」</div>
+    <h1>iOS 开发路线图<br><span class="accent">按优先级标注版</span></h1>
+    <p class="lede">基于 roadmap.sh/ios 的官方结构，但给每个节点打上优先级——一眼看清哪些是开发必备基础，哪些等用到再学。</p>
+    <p class="src">来源结构：<a href="https://roadmap.sh/ios">roadmap.sh/ios</a> · 已按 2026 实际开发情况调整并补充说明</p>
+    <div class="legend">
+      <div class="leg l1"><b><span class="dot"></span>必学</b><p>开发必备基础，不会就做不出 App。连起来就是主干。</p></div>
+      <div class="leg l2"><b><span class="dot"></span>建议学</b><p>主线中应掌握，让你写得更专业、更稳。</p></div>
+      <div class="leg l3"><b><span class="dot"></span>用到再学</b><p>项目需要时再入门，或了解即可（含较旧/小众项）。</p></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <div class="section-label">The Trunk</div>
+    <h2>先看主干：这条线走通 = 能独立做 App</h2>
+    <p class="note">下面是所有「🔴 必学」节点按学习顺序串起来的主线。先沿这条主干走，其余黄色/灰色节点按需补充即可。</p>
+    <div class="trunk reveal">
+      <div class="head"><span class="dot"></span><b>必学主线（学习顺序）</b></div>
+      <ol id="trunk"></ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Full Roadmap</div>
+    <h2>完整节点（按 roadmap.sh 主干顺序）</h2>
+    <p class="note">每个节点标注了中文 (English) 与优先级。灰色节点已刻意弱化——它们不是学习重点。</p>
+    <div id="roadmap" style="margin-top:18px"></div>
+  </section>
+
+  <footer>
+    结构来源 <a href="https://roadmap.sh/ios">roadmap.sh/ios</a> · 优先级与 2026 说明为本路线图补充 · 祝你顺利入门 🚀
+  </footer>
+</main>
+
+<script>
+/* tier: 1=必学 2=建议 3=用到再学 ; mod=2026替代说明 ; trunk=是否进主线 */
+const TRUNK = [
+  "Swift 基础","核心编程概念","Git / GitHub","Xcode 基本使用","SwiftUI",
+  "SwiftUI 导航","架构模式 (MVVM)","闭包/回调","async / await",
+  "数据持久化","JSON 解析","网络请求","Swift Package Manager",
+  "Xcode 调试","上架 App Store / TestFlight"
+];
+
+const DATA = [
+ {g:"基础阶段", en:"The Fundamentals", items:[
+   {zh:"Swift 语言（推荐）",en:"Swift (Recommended)",tier:1,note:"iOS 的主力语言，整条路线的地基。",subs:[
+     {zh:"Swift 基础",en:"Swift Basics",tier:1},
+     {zh:"为什么用 Swift",en:"History & Why Swift?",tier:3},
+     {zh:"相比 OC 的优势",en:"Benefits over Objective-C",tier:3},
+   ]},
+   {zh:"Objective-C",en:"Objective-C",tier:3,note:"老项目/老库才会用到。新手可完全跳过，维护老代码时再补。",subs:[
+     {zh:"OC 基础",en:"Objective-C Basics",tier:3},
+     {zh:"与 Swift 互操作",en:"Interoperability with Swift",tier:3},
+   ]},
+   {zh:"iOS 架构概览",en:"iOS Architecture",tier:2,note:"知道系统大致分几层即可，不必记每个框架。用到具体框架时再查。",subs:[
+     {zh:"Cocoa Touch",en:"Cocoa Touch",tier:2},
+     {zh:"Core Services / Core OS",en:"Core Services / Core OS",tier:3},
+     {zh:"Core Graphics / Animation",en:"Core Graphics / Animation",tier:3},
+     {zh:"Media / AVFoundation",en:"Media / AVFoundation",tier:3},
+     {zh:"Core Image / Audio / Metal",en:"Core Image / Audio / Metal",tier:3},
+   ]},
+   {zh:"核心编程概念",en:"Core Programming Concepts",tier:1,note:"无论用哪种语言都要懂的硬基础。",subs:[
+     {zh:"面向对象 OOP",en:"OOP",tier:1},
+     {zh:"内存管理 (ARC)",en:"Memory Management",tier:1},
+     {zh:"错误处理",en:"Error Handling",tier:1},
+     {zh:"并发 (async/await)",en:"Concurrency",tier:1},
+     {zh:"函数式编程",en:"Functional Programming",tier:2},
+     {zh:"VC 生命周期",en:"ViewController Lifecycle",tier:2,mod:"偏 UIKit，SwiftUI 优先可缓学"},
+   ]},
+ ]},
+
+ {g:"环境搭建", en:"Setting Up", items:[
+   {zh:"版本控制",en:"Version Control",tier:1,note:"从写第一个项目就开始用，别等。",subs:[
+     {zh:"Git",en:"Git",tier:1},{zh:"GitHub",en:"GitHub",tier:1},
+   ]},
+   {zh:"Xcode",en:"Xcode",tier:1,note:"开发工具本身。基本使用必会；Interface Builder 这类 UIKit 时代的东西了解即可。",subs:[
+     {zh:"安装 / 新建项目 / 界面",en:"Install / New Project / UI",tier:1},
+     {zh:"导航器 / 编辑器 / 文件",en:"Navigators / Editors / Files",tier:1},
+     {zh:"断点 / 单步 / 调试导航",en:"Breakpoints / Stepping",tier:2},
+     {zh:"Interface Builder / IBOutlet",en:"Interface Builder / IB",tier:3,mod:"SwiftUI 优先可跳过"},
+     {zh:"Auto Layout",en:"Auto Layout",tier:3,mod:"仅做 UIKit 时需要"},
+   ]},
+ ]},
+
+ {g:"界面与组件", en:"App Components / UI", items:[
+   {zh:"SwiftUI",en:"SwiftUI",tier:1,note:"2026 新项目首选 UI 框架，重点学透。",subs:[
+     {zh:"声明式语法",en:"Declarative Syntax",tier:1},
+     {zh:"组件 / 视图与修饰符",en:"Components / Views & Modifiers",tier:1},
+     {zh:"状态管理",en:"State Management",tier:1,mod:"用 @Observable，非旧版 ObservableObject"},
+     {zh:"数据绑定",en:"Data Binding",tier:1},
+     {zh:"搭建界面 / 导航 / 转场",en:"Building UI / Navigation",tier:1},
+   ]},
+   {zh:"UIKit",en:"UIKit",tier:3,note:"老项目、特定控件才用。新手先专注 SwiftUI，用到再补。",subs:[
+     {zh:"视图 / 控制器 / 交互",en:"Views / Controllers",tier:3},
+     {zh:"Storyboards / Xibs",en:"Storyboards / Xibs",tier:3,mod:"已不推荐"},
+     {zh:"导航 / 转场",en:"Navigation / Transitions",tier:3},
+   ]},
+   {zh:"UI 设计规范",en:"UI Design",tier:2,note:"做出「像 iOS 应用」的关键。",subs:[
+     {zh:"人机界面指南 HIG",en:"HIG",tier:2},
+   ]},
+   {zh:"界面导航",en:"Navigation",tier:1,note:"页面之间怎么跳转。SwiftUI 部分必学，UIKit 部分了解。",subs:[
+     {zh:"SwiftUI 导航",en:"NavigationStack",tier:1,mod:"用 NavigationStack，非旧版 NavigationView"},
+     {zh:"NavigationLink / 弹出关闭",en:"NavigationLink / Present",tier:1},
+     {zh:"UIKit 导航 / Segue",en:"UIKit Nav / Segues",tier:3},
+   ]},
+   {zh:"动画",en:"Animations",tier:3,note:"用到再学。SwiftUI 自带动画已能覆盖大部分需求。",subs:[
+     {zh:"Core Animation 基础",en:"Core Animation",tier:3},
+     {zh:"Lottie",en:"Lottie",tier:3},
+   ]},
+ ]},
+
+ {g:"架构与模式", en:"Architecture & Patterns", items:[
+   {zh:"架构模式",en:"Architectural Patterns",tier:1,note:"重点掌握 MVVM 一种即可，其余了解名字。",subs:[
+     {zh:"MVVM",en:"MVVM",tier:1},
+     {zh:"MVVM-C",en:"MVVM-C",tier:2},
+     {zh:"MVC / MVP",en:"MVC / MVP",tier:3},
+     {zh:"VIPER / TCA",en:"VIPER / TCA",tier:3,mod:"进阶/特定团队才用"},
+   ]},
+   {zh:"闭包与回调",en:"Closures & Callbacks",tier:1,note:"Swift 里无处不在，必须吃透。",subs:[
+     {zh:"闭包 Closures",en:"Closures",tier:1},
+     {zh:"值捕获与内存",en:"Capturing & Memory",tier:2},
+     {zh:"回调地狱",en:"Callback Hell",tier:3,mod:"async/await 已基本取代"},
+   ]},
+   {zh:"代理模式",en:"Delegate Pattern",tier:2,note:"读懂系统 API 经常需要，建议会用。",subs:[
+     {zh:"实现 Delegate",en:"Implementing Delegates",tier:2},
+   ]},
+   {zh:"响应式编程",en:"Reactive Programming",tier:3,note:"用到再学。新项目优先 async/await，Combine 了解即可，RxSwift 可不学。",subs:[
+     {zh:"Combine",en:"Combine",tier:2},
+     {zh:"Publishers / Operators",en:"Publishers / Operators",tier:3},
+     {zh:"RxSwift 全家桶",en:"RxSwift",tier:3,mod:"老项目才有，可跳过"},
+   ]},
+ ]},
+
+ {g:"异步与数据", en:"Async & Data", items:[
+   {zh:"async / await",en:"Async / Await",tier:1,note:"2026 处理异步的标准方式，必学。",subs:[
+     {zh:"Swift 并发",en:"Concurrency",tier:1},
+   ]},
+   {zh:"数据持久化",en:"Data Persistence",tier:1,note:"让数据重启后还在。",subs:[
+     {zh:"UserDefaults",en:"User Defaults",tier:1},
+     {zh:"本地数据库",en:"Core Data",tier:2,mod:"新项目优先 SwiftData"},
+     {zh:"Keychain",en:"Keychain",tier:2},
+     {zh:"文件系统",en:"File System",tier:2},
+     {zh:"SQLite",en:"SQLite",tier:3},
+   ]},
+   {zh:"JSON / XML",en:"JSON / XML",tier:1,note:"解析接口返回的数据，用 Codable。",subs:[
+     {zh:"解析 / 序列化 (Codable)",en:"Parsing / Serializing",tier:1},
+   ]},
+   {zh:"网络请求",en:"Networking",tier:1,note:"几乎所有 App 都要联网。",subs:[
+     {zh:"HTTP / REST",en:"HTTP / REST",tier:1},
+     {zh:"URLSession",en:"URLSession",tier:1},
+     {zh:"Alamofire",en:"Alamofire",tier:2,mod:"URLSession 够用，库按需"},
+     {zh:"GraphQL",en:"GraphQL",tier:3},
+   ]},
+   {zh:"并发与多线程",en:"Concurrency & Multithreading",tier:2,note:"async/await 之外的底层机制，了解为主。",subs:[
+     {zh:"GCD",en:"GCD",tier:2,mod:"读老代码会遇到"},
+     {zh:"Operation Queues",en:"Operation Queues",tier:3},
+   ]},
+ ]},
+
+ {g:"依赖与扩展能力", en:"Dependencies & Frameworks", items:[
+   {zh:"依赖管理",en:"Dependency Manager",tier:1,note:"引入第三方库。只学 SPM 即可。",subs:[
+     {zh:"Swift Package Manager",en:"Swift Package Manager",tier:1},
+     {zh:"CocoaPods / Carthage",en:"CocoaPods / Carthage",tier:3,mod:"较旧，老项目才有"},
+   ]},
+   {zh:"系统能力框架",en:"System Frameworks",tier:3,note:"按你的 App 需求选学，用到哪个学哪个。",subs:[
+     {zh:"MapKit",en:"MapKit",tier:3},{zh:"HealthKit",en:"HealthKit",tier:3},
+     {zh:"Core ML",en:"Core ML",tier:3},{zh:"ARKit",en:"ARKit",tier:3},{zh:"GameKit",en:"GameKit",tier:3},
+   ]},
+   {zh:"打包成库 / Framework",en:"Frameworks & Library",tier:3,note:"做 SDK 或大型模块化时才需要。",subs:[
+     {zh:"XCFramework / 动静态库",en:"XCFramework / Libraries",tier:3},
+   ]},
+   {zh:"无障碍",en:"Accessibility",tier:2,note:"想正式上架、让更多人能用，建议掌握基础。",subs:[
+     {zh:"VoiceOver / 动态字体",en:"VoiceOver / Dynamic Type",tier:2},
+     {zh:"无障碍检查器",en:"Accessibility Inspector",tier:3},
+   ]},
+ ]},
+
+ {g:"质量与调试", en:"Quality & Debugging", items:[
+   {zh:"调试技巧",en:"Debugging Techniques",tier:1,note:"找 Bug 的基本功，必会。",subs:[
+     {zh:"Xcode 调试器",en:"Xcode Debugger",tier:1},
+     {zh:"Instruments 性能分析",en:"Profiling Instruments",tier:2},
+   ]},
+   {zh:"代码质量工具",en:"Code Quality Tools",tier:2,note:"团队协作建议加，个人项目可后置。",subs:[
+     {zh:"SwiftLint",en:"SwiftLint",tier:2},
+     {zh:"SwiftFormat / Tailor",en:"SwiftFormat / Tailor",tier:3},
+   ]},
+   {zh:"单元 / UI 测试",en:"Unit & UI Testing",tier:2,note:"先会写基本单元测试，进阶可后补。",subs:[
+     {zh:"单元测试",en:"XCTest",tier:2,mod:"新项目用 Swift Testing"},
+     {zh:"UI 测试",en:"XCUITest",tier:3},
+     {zh:"测试计划 / 覆盖率",en:"Test Plan / Coverage",tier:3},
+   ]},
+ ]},
+
+ {g:"发布与进阶", en:"Distribution & Beyond", items:[
+   {zh:"上架 App Store",en:"App Store Distribution",tier:1,note:"把 App 交到用户手里的最后一步。",subs:[]},
+   {zh:"TestFlight",en:"TestFlight",tier:1,note:"上架前给真人测试，必经流程。",subs:[]},
+   {zh:"Fastlane",en:"Fastlane",tier:3,note:"自动化打包发布，团队/频繁发版时再上。",subs:[]},
+   {zh:"持续集成 CI/CD",en:"CI / CD",tier:3,note:"用到再学，个人项目优先 GitHub Actions。",subs:[
+     {zh:"GitHub Actions",en:"GitHub Actions",tier:3},
+     {zh:"Jenkins / CircleCI / GitLab",en:"Jenkins / CircleCI",tier:3},
+   ]},
+   {zh:"应用商店优化 ASO",en:"App Store Optimization",tier:3,note:"想做推广运营时再了解。",subs:[]},
+   {zh:"持续学习 (关注 WWDC)",en:"Keeping Updated with WWDC",tier:2,note:"每年看 WWDC 跟进新 Swift / iOS SDK。",subs:[
+     {zh:"最新 Swift / iOS SDK",en:"Latest Swift / iOS SDK",tier:2},
+   ]},
+ ]},
+];
+
+// render trunk
+const tEl=document.getElementById('trunk');
+TRUNK.forEach((t,i)=>{
+  const li=document.createElement('li'); li.textContent=t; tEl.appendChild(li);
+});
+
+// render roadmap
+const root=document.getElementById('roadmap');
+const tierClass={1:'b1',2:'b2',3:'b3'};
+const subClass={1:'s1',2:'s2',3:'s3'};
+const tierName={1:'必学',2:'建议',3:'用到再学'};
+DATA.forEach(group=>{
+  const g=document.createElement('div'); g.className='group reveal';
+  let html=`<div class="ghead"><h3>${group.g}</h3><span class="en">${group.en}</span></div>`;
+  group.items.forEach(it=>{
+    const dim = it.tier===3 ? 'dim':'';
+    html+=`<div class="topic"><div class="trow">`+
+      `<span class="badge ${tierClass[it.tier]}">${tierName[it.tier]}</span>`+
+      `<span class="tname ${dim}">${it.zh}<span class="ten">${it.en}</span>`+
+      `${it.mod?`<span class="mod">2026 · ${it.mod}</span>`:''}</span>`+
+      (it.note?`<div class="tnote">${it.note}</div>`:'')+
+      `</div>`;
+    if(it.subs && it.subs.length){
+      html+=`<div class="subs">`;
+      it.subs.forEach(s=>{
+        html+=`<span class="sub ${subClass[s.tier]}"><span class="sdot"></span>${s.zh}`+
+          `<span class="se">${s.en}</span>`+
+          `${s.mod?`<span class="mod">${s.mod}</span>`:''}</span>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  });
+  g.innerHTML=html;
+  root.appendChild(g);
+});
+
+// add closing tip
+const tip=document.createElement('div');
+tip.className='tipbox reveal';
+tip.innerHTML='<b>怎么用这份图：</b>先把上面「必学主线」的 15 个红色节点按顺序走通——走完你就能独立做 App。黄色节点在主线过程中顺手补；灰色节点不用现在碰，等某个真实项目要用到了，再回来学那一个。';
+root.appendChild(tip);
+
+// progress bar + reveal
+const bar=document.getElementById('progress');
+const onScroll=()=>{const h=document.documentElement;bar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';};
+document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
