@@ -40,7 +40,7 @@
     <span class="leg"><span class="dot later"></span>用到再学：深入或专项能力</span>
   </div>
 
-  <div class="path">当前路径：<code>iOS → Objective-C → 基础语法 → 类与对象</code></div>
+  <div class="path">当前路径：<code>iOS → Objective-C → 基础语法 → 类与对象 → 属性与方法 → ARC → Block → Category / Extension → Protocol / Delegate → Swift 互操作</code></div>
 
   <section class="group">
     <div class="ghead"><h2>Objective-C 主干</h2><span>Objective-C Trunk</span></div>
@@ -89,48 +89,91 @@
     <div class="topic">
       <div class="row">
         <span class="badge b1">必学</span>
-        <a class="title" href="#">属性与方法 <span class="en">Property & Method</span></a>
-        <div class="note">下一阶段：strong / weak / copy / assign、getter / setter、类方法与实例方法。</div>
+        <a class="title" href="../docs/objective-c/03-property-and-method.md">属性与方法 <span class="en">Property & Method</span></a>
+        <div class="note">读懂属性修饰符、getter / setter、点语法本质、方法声明和类方法 / 实例方法。</div>
+      </div>
+      <div class="subs">
+        <a href="../docs/objective-c/03-property-and-method.md#2-property-的基本结构">property 结构</a>
+        <a href="../docs/objective-c/03-property-and-method.md#4-strong--weak--copy--assign">修饰符</a>
+        <a href="../docs/objective-c/03-property-and-method.md#8-property-自动生成-getter--setter">getter / setter</a>
+        <a href="../docs/objective-c/03-property-and-method.md#10-selfname-和-_name">self / ivar</a>
+        <a href="../docs/objective-c/03-property-and-method.md#11-readonly--readwrite">readonly</a>
+        <a href="../docs/objective-c/03-property-and-method.md#12-方法声明怎么读">方法声明</a>
       </div>
     </div>
 
     <div class="topic">
       <div class="row">
         <span class="badge b1">必学</span>
-        <a class="title" href="#">内存管理 ARC <span class="en">ARC</span></a>
+        <a class="title" href="../docs/objective-c/04-memory-management-arc.md">内存管理 ARC <span class="en">ARC</span></a>
         <div class="note">读懂 retain cycle、weak delegate、Block 捕获 self 的基础。</div>
       </div>
+      <div class="subs">
+        <a href="../docs/objective-c/04-memory-management-arc.md#3-arc-做了什么">ARC</a>
+        <a href="../docs/objective-c/04-memory-management-arc.md#4-strong-表示持有对象">strong</a>
+        <a href="../docs/objective-c/04-memory-management-arc.md#5-weak-表示不持有对象">weak</a>
+        <a href="../docs/objective-c/04-memory-management-arc.md#8-循环引用">循环引用</a>
+        <a href="../docs/objective-c/04-memory-management-arc.md#10-block-捕获-self">Block 捕获 self</a>
+      </div>
     </div>
 
     <div class="topic">
       <div class="row">
         <span class="badge b2">建议学</span>
-        <a class="title" href="#">Block <span class="en">Block</span></a>
+        <a class="title" href="../docs/objective-c/05-block.md">Block <span class="en">Block</span></a>
         <div class="note">OC 中的闭包，常见于回调、异步、UIKit API、链式封装。</div>
       </div>
-    </div>
-
-    <div class="topic">
-      <div class="row">
-        <span class="badge b2">建议学</span>
-        <a class="title" href="#">Category / Extension <span class="en">Category / Extension</span></a>
-        <div class="note">老项目常用扩展方式，也是 Runtime 相关问题的入口。</div>
+      <div class="subs">
+        <a href="../docs/objective-c/05-block.md#2-第一个-block">基本语法</a>
+        <a href="../docs/objective-c/05-block.md#5-typedef-简化-block">typedef</a>
+        <a href="../docs/objective-c/05-block.md#6-block-作为参数">作为参数</a>
+        <a href="../docs/objective-c/05-block.md#7-block-作为属性">作为属性</a>
+        <a href="../docs/objective-c/05-block.md#9-捕获-self-与循环引用">捕获 self</a>
       </div>
     </div>
 
     <div class="topic">
       <div class="row">
         <span class="badge b2">建议学</span>
-        <a class="title" href="#">Protocol / Delegate <span class="en">Protocol / Delegate</span></a>
+        <a class="title" href="../docs/objective-c/06-category-extension.md">Category / Extension <span class="en">Category / Extension</span></a>
+        <div class="note">老项目常用扩展方式，也是 Runtime 相关问题的入口。</div>
+      </div>
+      <div class="subs">
+        <a href="../docs/objective-c/06-category-extension.md#2-category-是什么">Category</a>
+        <a href="../docs/objective-c/06-category-extension.md#4-category-不能直接添加普通-ivar">ivar 限制</a>
+        <a href="../docs/objective-c/06-category-extension.md#5-方法名冲突风险">方法冲突</a>
+        <a href="../docs/objective-c/06-category-extension.md#6-extension-是什么">Extension</a>
+        <a href="../docs/objective-c/06-category-extension.md#8-私有属性为什么放-extension">私有属性</a>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="row">
+        <span class="badge b2">建议学</span>
+        <a class="title" href="../docs/objective-c/07-protocol-delegate.md">Protocol / Delegate <span class="en">Protocol / Delegate</span></a>
         <div class="note">UIKit 和老项目最常见的解耦通信方式。</div>
+      </div>
+      <div class="subs">
+        <a href="../docs/objective-c/07-protocol-delegate.md#2-protocol-是什么">Protocol</a>
+        <a href="../docs/objective-c/07-protocol-delegate.md#3-idprotocolname-怎么读">id&lt;Protocol&gt;</a>
+        <a href="../docs/objective-c/07-protocol-delegate.md#4-required-和-optional">required / optional</a>
+        <a href="../docs/objective-c/07-protocol-delegate.md#5-respondstoselector">respondsToSelector</a>
+        <a href="../docs/objective-c/07-protocol-delegate.md#9-delegate-和-block-怎么选">Delegate vs Block</a>
       </div>
     </div>
 
     <div class="topic">
       <div class="row">
         <span class="badge b3">用到再学</span>
-        <a class="title" href="#">Swift 互操作 <span class="en">Swift Interop</span></a>
+        <a class="title" href="../docs/objective-c/08-swift-interop.md">Swift 互操作 <span class="en">Swift Interop</span></a>
         <div class="note">当你需要读混编项目、桥接头、暴露 Swift 给 OC 时再系统学习。</div>
+      </div>
+      <div class="subs">
+        <a href="../docs/objective-c/08-swift-interop.md#2-swift-调用-objective-c">Swift 调 OC</a>
+        <a href="../docs/objective-c/08-swift-interop.md#3-objective-c-调用-swift">OC 调 Swift</a>
+        <a href="../docs/objective-c/08-swift-interop.md#4-swift-暴露给-oc">@objc</a>
+        <a href="../docs/objective-c/08-swift-interop.md#6-nullability">nullability</a>
+        <a href="../docs/objective-c/08-swift-interop.md#9-block-与-swift-closure">Block / Closure</a>
       </div>
     </div>
   </section>

@@ -1,0 +1,19 @@
+{
+  "name": "ioslearning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/inline-dist-assets.mjs",
+    "preview": "vite preview",
+    "verify": "node tests/routing.test.mjs && node tests/verify-static-app.mjs"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "marked": "^16.3.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
