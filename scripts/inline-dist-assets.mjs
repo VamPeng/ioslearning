@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
 const distDir = path.join(root, "dist");
 const indexPath = path.join(distDir, "index.html");
+const offlineLinkedPaths = ["ios-roadmap-priority.html", "roadmap/oc-roadmap.html", "docs/objective-c"];
 
 let html = readFileSync(indexPath, "utf8");
 
@@ -33,3 +34,9 @@ if (scriptMatch) {
 }
 
 writeFileSync(indexPath, html);
+
+for (const file of offlineLinkedPaths) {
+  const target = path.join(distDir, file);
+  mkdirSync(path.dirname(target), { recursive: true });
+  cpSync(path.join(root, file), target, { recursive: true });
+}

@@ -125,6 +125,7 @@ function render() {
           </div>
           <div class="hero-actions">
             <a href="#${documents[1]?.id ?? active.id}">开始学习</a>
+            <a href="ios-roadmap-priority.html">iOS 优先级路线图</a>
             <a href="roadmap/oc-roadmap.html">旧版 OC 路线图</a>
           </div>
         </section>

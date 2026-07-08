@@ -32,6 +32,8 @@ assert.ok(main.includes("import.meta.glob"), "app should bundle Markdown with im
 assert.ok(main.includes("querySelector"), "app should render into the DOM");
 assert.ok(main.includes("marked"), "app should use marked for Markdown rendering");
 assert.ok(main.includes("highlight.js"), "app should import highlight.js");
+assert.ok(exists("ios-roadmap-priority.html"), "priority iOS roadmap HTML should exist");
+assert.ok(main.includes('href="ios-roadmap-priority.html"'), "home page should link to the priority iOS roadmap");
 
 const objectiveCChapters = [
   ["04-memory-management-arc", "objective-c-memory-management-arc-cheatsheet.md"],
@@ -69,6 +71,23 @@ assert.ok(devLog.includes("Vite"), "development log should explain the Vite work
 assert.ok(exists("scripts/inline-dist-assets.mjs"), "offline build should inline dist assets");
 
 assert.ok(exists("dist/index.html"), "npm run build should create dist/index.html");
+const offlineLinkedFiles = [
+  "ios-roadmap-priority.html",
+  "roadmap/oc-roadmap.html",
+  "docs/objective-c/00-overview.md",
+  "docs/objective-c/01-basic-syntax.md",
+  "docs/objective-c/02-class-and-object.md",
+  "docs/objective-c/03-property-and-method.md",
+  "docs/objective-c/04-memory-management-arc.md",
+  "docs/objective-c/05-block.md",
+  "docs/objective-c/06-category-extension.md",
+  "docs/objective-c/07-protocol-delegate.md",
+  "docs/objective-c/08-swift-interop.md",
+];
+
+for (const file of offlineLinkedFiles) {
+  assert.ok(exists(`dist/${file}`), `build should copy ${file} for offline links`);
+}
 const distAssets = readdirSync(path.join(root, "dist", "assets"));
 assert.ok(distAssets.some((file) => file.endsWith(".js")), "build should emit a JavaScript bundle");
 assert.ok(distAssets.some((file) => file.endsWith(".css")), "build should emit a CSS bundle");
