@@ -5,10 +5,10 @@
 当前采用“Markdown 源内容 + 前端学习 App”结构：
 
 ```text
-Vite App = 学习入口 / 搜索 / 目录 / Markdown 阅读体验
+Vite App = 学习入口 / 搜索 / Roadmap / Markdown 阅读体验
 Markdown = 具体知识正文 / 代码解释 / 复习资料
 Labs     = 可运行练习 / Demo 任务
-HTML     = 路线图页面 / 可对照资料
+HTML     = 完整路线图页面 / 可对照资料
 ```
 
 ## 学习入口
@@ -59,26 +59,38 @@ ioslearning/
     └── swift/
 ```
 
-## 左侧学习分类
+## 页面目录结构
 
-首页左侧导航按 iOS roadmap 的学习主题组织，不再按单纯文件类型组织。当前已接入：
+首页导航按 iOS Roadmap 阶段组织：
 
 ```text
-Objective-C
-├── 正文
-├── 速查表
-└── Labs
-
-Swift
-├── 正文
-├── 速查表
-└── Labs
-
-iOS 核心概念
-└── 正文
+一级目录：Roadmap 阶段
+二级目录：技术主题
+三级目录：具体学习文档
+右侧目录：当前 Markdown 的 H2 / H3 大纲
 ```
 
-后续新增 Xcode、SwiftUI、UIKit、网络请求、数据持久化、调试与发布等 Markdown 时，会根据文件路径自动进入对应一级学习分类。
+当前阶段结构：
+
+```text
+基础阶段
+├── Swift
+├── Objective-C
+├── iOS 核心概念
+└── iOS 架构概览
+
+环境搭建
+├── Git / GitHub
+└── Xcode
+
+界面与组件
+├── SwiftUI
+├── UIKit
+├── UI 设计规范
+└── 界面导航
+```
+
+新增 Markdown 后，前端会根据文件路径自动识别学习主题并进入对应目录。
 
 ## Objective-C 当前阶段
 
@@ -92,7 +104,27 @@ Objective-C
 ├── 05. Block
 ├── 06. Category / Extension
 ├── 07. Protocol / Delegate
-└── 08. Swift 互操作
+├── 08. Swift 互操作
+└── 09. Foundation 常用类型
+```
+
+第 09 章已经配套：
+
+```text
+正文      docs/objective-c/09-foundation-common-types.md
+速查表    cheatsheets/objective-c-foundation-common-types-cheatsheet.md
+Lab       labs/objective-c/09-foundation-common-types/README.md
+```
+
+Objective-C 下一步：
+
+```text
+10. Foundation Collection 与轻量泛型
+11. KVC / KVO
+12. Runtime 基础
+13. RunLoop 与消息机制基础
+14. GCD 与多线程基础
+15. 阶段总结与综合实战
 ```
 
 ## Swift 当前阶段
