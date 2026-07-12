@@ -96,10 +96,14 @@ NSArray<NSString *> *array = tags.allObjects;
 集合运算：
 
 ```objc
-NSMutableSet *result = [a mutableCopy];
-[result unionSet:b];       // 并集
-[result intersectSet:b];   // 交集
-[result minusSet:b];       // 差集
+NSMutableSet *unionResult = [a mutableCopy];
+[unionResult unionSet:b];
+
+NSMutableSet *intersection = [a mutableCopy];
+[intersection intersectSet:b];
+
+NSMutableSet *difference = [a mutableCopy];
+[difference minusSet:b];
 ```
 
 ## 7. NSOrderedSet
@@ -170,13 +174,15 @@ for (NSString *name in names) {
 反向删除：
 
 ```objc
-for (NSInteger index = names.count - 1; index >= 0; index--) {
+for (NSInteger index = (NSInteger)names.count - 1; index >= 0; index--) {
     NSString *name = names[(NSUInteger)index];
     if (name.length == 0) {
         [names removeObjectAtIndex:(NSUInteger)index];
     }
 }
 ```
+
+必须在减一之前把 `count` 转成 `NSInteger`，避免空数组时无符号下溢。
 
 ## 11. 排序
 
@@ -197,9 +203,14 @@ NSArray<NSNumber *> *sorted = [numbers sortedArrayUsingComparator:^NSComparisonR
 
 ```objc
 NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(
-    NSNumber *value,
-    NSDictionary *bindings
+    id object,
+    NSDictionary<NSString *, id> *bindings
 ) {
+    if (![object isKindOfClass:[NSNumber class]]) {
+        return NO;
+    }
+
+    NSNumber *value = object;
     return value.integerValue % 2 == 0;
 }];
 
@@ -274,5 +285,5 @@ if (rawNickname != nil &&
 5. 是否在遍历过程中修改集合？
 6. 是否声明了明确的轻量泛型？
 7. copy 是否被误认为深复制？
-8. 外部动态数据是否检查了真实类型？
+8. 外部动态数据是否检查真实类型？
 ```
