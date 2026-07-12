@@ -105,10 +105,11 @@ Objective-C
 ├── 06. Category / Extension
 ├── 07. Protocol / Delegate
 ├── 08. Swift 互操作
-└── 09. Foundation 常用类型
+├── 09. Foundation 常用类型
+└── 10. Foundation Collection 与轻量泛型
 ```
 
-第 09 章已经配套：
+第 09 章配套：
 
 ```text
 正文      docs/objective-c/09-foundation-common-types.md
@@ -116,10 +117,17 @@ Objective-C
 Lab       labs/objective-c/09-foundation-common-types/README.md
 ```
 
+第 10 章配套：
+
+```text
+正文      docs/objective-c/10-foundation-collections-lightweight-generics.md
+速查表    cheatsheets/objective-c-foundation-collections-lightweight-generics-cheatsheet.md
+Lab       labs/objective-c/10-foundation-collections-lightweight-generics/README.md
+```
+
 Objective-C 下一步：
 
 ```text
-10. Foundation Collection 与轻量泛型
 11. KVC / KVO
 12. Runtime 基础
 13. RunLoop 与消息机制基础
