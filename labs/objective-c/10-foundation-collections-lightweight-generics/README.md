@@ -168,6 +168,8 @@ userForId: 可能返回 nil
         NSUInteger index = [self.mutableUsers indexOfObjectIdenticalTo:oldUser];
         if (index != NSNotFound) {
             self.mutableUsers[index] = user;
+        } else {
+            [self.mutableUsers addObject:user];
         }
     } else {
         [self.mutableUsers addObject:user];
@@ -192,9 +194,14 @@ userForId: 可能返回 nil
 
 - (NSArray<OCUser *> *)usersWithTag:(NSString *)tag {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(
-        OCUser *user,
+        id object,
         NSDictionary<NSString *, id> *bindings
     ) {
+        if (![object isKindOfClass:[OCUser class]]) {
+            return NO;
+        }
+
+        OCUser *user = object;
         return [user.tags containsObject:tag];
     }];
 
@@ -430,7 +437,7 @@ for (NSString *name in names) {
 改为反向删除：
 
 ```objc
-for (NSInteger index = names.count - 1; index >= 0; index--) {
+for (NSInteger index = (NSInteger)names.count - 1; index >= 0; index--) {
     NSString *name = names[(NSUInteger)index];
 
     if (name.length == 0) {
@@ -440,6 +447,8 @@ for (NSInteger index = names.count - 1; index >= 0; index--) {
 
 NSLog(@"%@", names);
 ```
+
+先将 `count` 转为 `NSInteger` 再减一，空数组时起始值就是 `-1`，不会发生无符号下溢。
 
 结果：
 
@@ -471,8 +480,14 @@ limit 超出剩余数量时只返回剩余部分
 提示：
 
 ```objc
+if (index >= self.mutableUsers.count || limit == 0) {
+    return @[];
+}
+
+NSUInteger remaining = self.mutableUsers.count - index;
+NSUInteger actualLength = MIN(limit, remaining);
 NSRange range = NSMakeRange(index, actualLength);
-NSArray *page = [self.mutableUsers subarrayWithRange:range];
+return [self.mutableUsers subarrayWithRange:range];
 ```
 
 ### 任务 2：增加标签索引
@@ -492,8 +507,6 @@ NSMutableDictionary<NSString *, NSMutableSet<OCUser *> *> *usersByTag;
 
 ### 任务 3：消除外部可变数据影响
 
-测试下面代码：
-
 ```objc
 NSMutableArray<NSString *> *tags = [NSMutableArray arrayWithObject:@"ios"];
 OCUser *user = [[OCUser alloc] initWithUserId:@"3001"
@@ -504,20 +517,18 @@ OCUser *user = [[OCUser alloc] initWithUserId:@"3001"
 NSLog(@"%@", user.tags);
 ```
 
-确认 `OCUser` 内部使用 `copy` 后，外部修改不会改变用户的标签数组结构。
+确认 `OCUser` 使用 `copy` 后，外部修改不会改变内部标签数组结构。
 
 ---
 
 ## 完成标准
-
-你需要能回答：
 
 ```text
 1. 仓库为什么同时维护 NSMutableArray 和 NSMutableDictionary？
 2. 对外为什么返回 NSArray 快照而不是 NSMutableArray？
 3. addOrReplaceUser: 为什么必须同步更新数组和字典？
 4. NSSet 为什么适合汇总所有标签？
-5. NSDictionary<NSString *, id> 为什么仍然需要运行时类型检查？
+5. NSDictionary<NSString *, id> 为什么仍需运行时类型检查？
 6. NSNull 与 nil 有什么区别？
 7. 集合 copy 为什么不会自动深复制元素？
 8. 为什么不能在快速遍历过程中直接删除原集合元素？
@@ -528,8 +539,8 @@ NSLog(@"%@", user.tags);
 完成结果：
 
 ```text
-能设计一个同时支持顺序遍历和 ID 查询的仓库
+能设计同时支持顺序遍历和 ID 查询的仓库
 能安全处理外部动态字典
 能使用轻量泛型表达集合边界
-能正确处理可变集合、复制、NSNull 和遍历修改问题
+能正确处理可变集合、复制、NSNull 和遍历修改
 ```
