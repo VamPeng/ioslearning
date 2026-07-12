@@ -17,13 +17,14 @@ hljs.registerLanguage("swift", swift);
 const markdownModules = import.meta.glob(["../README.md", "../docs/**/*.md", "../cheatsheets/**/*.md", "../labs/**/*.md"], { eager: true, import: "default", query: "?raw" });
 
 const roadmap = [
-  { title: "基础阶段", items: ["Swift", "Objective-C", "iOS 核心概念", "iOS 架构概览"] },
-  { title: "环境搭建", items: ["Git / GitHub", "Xcode"] },
-  { title: "界面与组件", items: ["SwiftUI", "UIKit", "UI 设计规范", "界面导航"] },
-  { title: "架构与模式", items: ["架构模式", "闭包与回调", "async / await"] },
-  { title: "异步与数据", items: ["数据持久化", "JSON / XML", "网络请求"] },
-  { title: "依赖与扩展", items: ["依赖管理", "系统能力框架"] },
-  { title: "质量与发布", items: ["调试与质量", "发布与进阶"] },
+  { title: "基础阶段", en: "The Fundamentals", items: ["Swift", "Objective-C", "iOS 核心概念", "iOS 架构概览"] },
+  { title: "环境搭建", en: "Setting Up", items: ["Git / GitHub", "Xcode"] },
+  { title: "界面与组件", en: "App Components / UI", items: ["SwiftUI", "UIKit", "UI 设计规范", "界面导航"] },
+  { title: "架构与模式", en: "Architecture & Patterns", items: ["架构模式", "闭包与回调", "async / await"] },
+  { title: "异步与数据", en: "Async & Data", items: ["数据持久化", "JSON / XML", "网络请求"] },
+  { title: "依赖与扩展能力", en: "Dependencies & Frameworks", items: ["依赖管理", "系统能力框架"] },
+  { title: "质量与调试", en: "Quality & Debugging", items: ["调试与质量"] },
+  { title: "发布与进阶", en: "Distribution & Beyond", items: ["发布与进阶"] },
 ];
 
 const topics = [
@@ -53,65 +54,53 @@ const state = { query: "", activeId: resolveId(), roadmapOpen: false };
 const app = document.querySelector("#app");
 marked.setOptions({ gfm: true, breaks: false });
 render();
-window.addEventListener("hashchange", () => { state.activeId = resolveId(); render(); });
+window.addEventListener("hashchange", () => { state.activeId = resolveId(); state.roadmapOpen = false; render(); });
 
 function render() {
   const active = docs.find((doc) => doc.id === state.activeId) ?? docs[0];
   const visible = docs.filter((doc) => matches(doc, state.query));
-  app.innerHTML = `
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">iOS</span><div><strong>iOS Learning</strong><small>Roadmap 驱动的学习资料</small></div></div>
-        <button class="roadmap-entry ${state.roadmapOpen ? "active" : ""}" id="roadmap-toggle"><span>学习 Roadmap</span><small>总目录与学习顺序</small></button>
-        <label class="search"><span>搜索资料</span><input id="search-input" value="${escapeAttr(state.query)}" placeholder="Swift、ARC、闭包、网络…" /></label>
-        <nav class="doc-nav">${renderNav(visible, active)}</nav>
-      </aside>
-      <main class="workspace">
-        ${state.roadmapOpen ? renderRoadmap() : renderReader(active)}
-      </main>
-    </div>`;
-  bind(active);
+  app.innerHTML = `<div class="app-shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">iOS</span><div><strong>iOS Learning</strong><small>Roadmap 驱动的学习资料</small></div></div><button class="roadmap-entry ${state.roadmapOpen ? "active" : ""}" id="roadmap-toggle"><span>iOS Roadmap</span><small>完整路线与优先级</small></button><label class="search"><span>搜索资料</span><input id="search-input" value="${escapeAttr(state.query)}" placeholder="Swift、ARC、闭包、网络…" /></label><nav class="doc-nav">${renderNav(visible, active)}</nav></aside><main class="workspace">${state.roadmapOpen ? renderRoadmap() : renderReader(active)}</main></div>`;
+  bind();
 }
 
 function renderReader(active) {
-  return `<div class="content-grid">
-    <article class="reader"><div class="doc-head"><span>${escapeHtml(active.category)}</span><strong>${escapeHtml(active.title)}</strong><small>${escapeHtml(active.summary)}</small></div><div class="markdown-body">${marked.parse(active.content)}</div></article>
-    <aside class="toc"><strong>本页目录</strong>${renderToc(active)}</aside>
-  </div>`;
+  const stage = roadmap.find((group) => group.items.includes(active.category));
+  return `<div class="content-grid"><article class="reader"><div class="doc-head"><span>${escapeHtml(stage?.title ?? active.category)} / ${escapeHtml(active.category)}</span><strong>${escapeHtml(active.title)}</strong><small>${escapeHtml(active.summary)}</small></div><div class="markdown-body">${marked.parse(active.content)}</div></article><aside class="toc"><strong>本页目录</strong>${renderToc(active)}</aside></div>`;
 }
 
 function renderRoadmap() {
-  const groups = roadmap.map((group, index) => `<section class="roadmap-group"><div class="roadmap-index">${String(index + 1).padStart(2, "0")}</div><div><h2>${group.title}</h2><div class="roadmap-items">${group.items.map((name) => {
+  const groups = roadmap.map((group, index) => `<section class="roadmap-group"><div class="roadmap-index">${String(index + 1).padStart(2, "0")}</div><div><h2>${group.title}</h2><p class="roadmap-en">${group.en}</p><div class="roadmap-items">${group.items.map((name) => {
     const count = docs.filter((doc) => doc.category === name).length;
     const first = docs.find((doc) => doc.category === name);
-    return first ? `<a href="#${escapeAttr(first.id)}" data-open-doc="1"><span>${escapeHtml(name)}</span><small>${count} 篇资料</small></a>` : `<div class="roadmap-empty"><span>${escapeHtml(name)}</span><small>待补充</small></div>`;
+    return first ? `<a href="#${escapeAttr(first.id)}"><span>${escapeHtml(name)}</span><small>${count} 篇资料</small></a>` : `<div class="roadmap-empty"><span>${escapeHtml(name)}</span><small>待补充</small></div>`;
   }).join("")}</div></div></section>`).join("");
-  return `<div class="roadmap-page"><header><span>iOS ROADMAP</span><h1>从语言基础到独立发布 App</h1><p>Roadmap 是总目录，左侧资料树是当前仓库内容，进入文档后右侧显示本页大纲。</p><a href="ios-roadmap-priority.html" target="_blank" rel="noreferrer">打开完整优先级路线图 ↗</a></header>${groups}</div>`;
+  return `<div class="roadmap-page"><header><span>iOS ROADMAP</span><h1>从基础阶段到发布与进阶</h1><p>一级目录严格按照 Roadmap 阶段组织；技术主题作为二级目录，具体文档作为三级目录。</p><a href="ios-roadmap-priority.html" target="_blank" rel="noreferrer">打开完整优先级路线图 ↗</a></header>${groups}</div>`;
 }
 
 function renderNav(visible, active) {
-  const grouped = Object.groupBy ? Object.groupBy(visible, (doc) => doc.category) : visible.reduce((acc, doc) => ((acc[doc.category] ??= []).push(doc), acc), {});
-  return topics.map((topic) => {
-    const items = grouped[topic.title] ?? [];
-    if (!items.length && state.query) return "";
-    const open = items.some((doc) => doc.id === active.id);
-    return `<details class="learn-topic" ${open ? "open" : ""}><summary><span>${escapeHtml(topic.title)}</span><small>${items.length || "待补充"}</small></summary><div>${items.length ? items.map((doc) => `<a class="doc-link ${doc.id === active.id ? "active" : ""}" href="#${escapeAttr(doc.id)}"><span>${escapeHtml(doc.title)}</span><small>${escapeHtml(doc.summary)}</small></a>`).join("") : `<p>该阶段目录已预留。</p>`}</div></details>`;
+  const grouped = visible.reduce((acc, doc) => ((acc[doc.category] ??= []).push(doc), acc), {});
+  const roadmapHtml = roadmap.map((group, index) => {
+    const groupDocs = group.items.flatMap((name) => grouped[name] ?? []);
+    if (!groupDocs.length && state.query) return "";
+    const groupOpen = groupDocs.some((doc) => doc.id === active.id);
+    return `<details class="roadmap-stage" ${groupOpen || !state.query ? "open" : ""}><summary><span class="stage-index">${String(index + 1).padStart(2, "0")}</span><span class="stage-title"><strong>${escapeHtml(group.title)}</strong><small>${escapeHtml(group.en)}</small></span><span class="stage-count">${groupDocs.length || "待补充"}</span></summary><div class="stage-body">${group.items.map((name) => renderTopic(name, grouped[name] ?? [], active)).join("")}</div></details>`;
   }).join("");
+  const projectDocs = grouped["项目"] ?? [];
+  return `${roadmapHtml}${projectDocs.length ? `<details class="roadmap-stage project-stage"><summary><span class="stage-index">P</span><span class="stage-title"><strong>项目资料</strong><small>Project</small></span><span class="stage-count">${projectDocs.length}</span></summary><div class="stage-body">${renderTopic("项目", projectDocs, active)}</div></details>` : ""}`;
 }
 
-function renderToc(doc) {
-  if (!doc.headings.length) return `<p>当前文档没有二级标题。</p>`;
-  return `<ol>${doc.headings.map((h) => `<li class="level-${h.level}"><a href="#${escapeAttr(doc.id)}/${escapeAttr(h.slug)}">${escapeHtml(h.text)}</a></li>`).join("")}</ol>`;
+function renderTopic(name, items, active) {
+  const open = items.some((doc) => doc.id === active.id);
+  return `<details class="learn-topic" ${open ? "open" : ""}><summary><span>${escapeHtml(name)}</span><small>${items.length || "待补充"}</small></summary><div>${items.length ? items.map((doc) => `<a class="doc-link ${doc.id === active.id ? "active" : ""}" href="#${escapeAttr(doc.id)}"><span>${escapeHtml(doc.title)}</span><small>${escapeHtml(doc.summary)}</small></a>`).join("") : `<p>该主题目录已预留。</p>`}</div></details>`;
 }
 
-function bind(active) {
+function renderToc(doc) { return doc.headings.length ? `<ol>${doc.headings.map((h) => `<li class="level-${h.level}"><a href="#${escapeAttr(doc.id)}/${escapeAttr(h.slug)}">${escapeHtml(h.text)}</a></li>`).join("")}</ol>` : `<p>当前文档没有二级标题。</p>`; }
+function bind() {
   document.querySelector("#roadmap-toggle")?.addEventListener("click", () => { state.roadmapOpen = true; render(); });
-  document.querySelectorAll("[data-open-doc]").forEach((el) => el.addEventListener("click", () => { state.roadmapOpen = false; }));
-  document.querySelector("#search-input")?.addEventListener("input", (event) => { state.query = event.target.value.trim(); render(); document.querySelector("#search-input")?.focus(); });
+  document.querySelector("#search-input")?.addEventListener("input", (event) => { state.query = event.target.value.trim(); render(); const input = document.querySelector("#search-input"); input?.focus(); input?.setSelectionRange(input.value.length, input.value.length); });
   document.querySelectorAll(".markdown-body h2, .markdown-body h3").forEach((heading) => { heading.id = slugify(heading.textContent); });
   document.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block));
-  const slug = location.hash.split("/").slice(1).join("/");
-  if (slug) document.querySelector(`#${CSS.escape(slug)}`)?.scrollIntoView({ block: "start" });
+  const slug = location.hash.split("/").slice(1).join("/"); if (slug) document.querySelector(`#${CSS.escape(slug)}`)?.scrollIntoView({ block: "start" });
 }
 
 function resolveId() { const raw = decodeURIComponent(location.hash.replace(/^#/, "").split("/")[0]); return docs.some((doc) => doc.id === raw) ? raw : docs[0]?.id; }
@@ -119,5 +108,5 @@ function getHeadings(markdown) { return [...markdown.matchAll(/^(#{2,3})\s+(.+)$
 function getSummary(markdown) { return markdown.split("\n").map((line) => line.trim()).find((line) => line && !line.startsWith("#") && !line.startsWith("```") && !line.startsWith("---"))?.replace(/[`*_]/g, "") ?? "学习资料"; }
 function matches(doc, query) { if (!query) return true; const q = query.toLowerCase(); return [doc.title, doc.rawTitle, doc.category, doc.summary, doc.content].some((v) => v.toLowerCase().includes(q)); }
 function slugify(value) { return String(value).toLowerCase().replace(/`/g, "").replace(/[^\p{Letter}\p{Number}]+/gu, "-").replace(/^-+|-+$/g, ""); }
-function escapeHtml(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+function escapeHtml(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;"); }
 function escapeAttr(value) { return escapeHtml(value); }
