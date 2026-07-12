@@ -2,23 +2,36 @@
 
 ## 目标
 
-通过一个“用户资料摘要生成器”练习 Foundation 常用类型：
+通过“用户资料摘要生成器”练习：
 
 ```text
-1. NSString / NSMutableString
-2. NSNumber
-3. NSDate / NSDateFormatter / NSCalendar
-4. NSURLComponents / NSURLQueryItem
-5. NSData
-6. NSNull
-7. 不可变对象和可变对象
+NSString / NSMutableString
+NSNumber
+NSDate / NSDateFormatter / NSCalendar
+NSURLComponents / NSURLQueryItem
+NSData
+NSNull
+不可变对象与可变对象
 ```
 
-这个 Lab 可以在 Xcode 的 macOS Command Line Tool 中运行，也可以把核心代码放进 iOS App 工程测试。
+建议在 Xcode 中创建 macOS Command Line Tool，语言选择 Objective-C。
 
 ---
 
-## 练习 1：创建用户资料模型
+## 1. 项目结构
+
+```text
+FoundationTypesLab/
+├── main.m
+├── OCProfile.h
+├── OCProfile.m
+├── OCProfileFormatter.h
+└── OCProfileFormatter.m
+```
+
+---
+
+## 2. 创建用户资料模型
 
 ### OCProfile.h
 
@@ -77,12 +90,12 @@ NS_ASSUME_NONNULL_END
 ```text
 NSString 属性使用 copy
 NSNumber、NSDate 使用 strong
-nickname 使用 id，是为了模拟 nil / NSNull / NSString 三种状态
+nickname 使用 id，用来模拟 nil、NSNull、NSString 三种状态
 ```
 
 ---
 
-## 练习 2：规范化空值
+## 3. 创建资料格式化器
 
 ### OCProfileFormatter.h
 
@@ -97,6 +110,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)displayNameForProfile:(OCProfile *)profile;
 - (NSString *)summaryForProfile:(OCProfile *)profile;
+- (nullable NSURL *)detailURLForProfile:(OCProfile *)profile;
+- (NSDate *)seventhDayAfterDate:(NSDate *)date;
 
 @end
 
@@ -118,124 +133,44 @@ NS_ASSUME_NONNULL_END
         return profile.name;
     }
 
-    if ([nickname isKindOfClass:[NSString class]] &&
-        [(NSString *)nickname length] > 0) {
-        return nickname;
+    if (![nickname isKindOfClass:[NSString class]]) {
+        return profile.name;
     }
 
-    return profile.name;
+    NSString *trimmed = [(NSString *)nickname
+        stringByTrimmingCharactersInSet:
+            [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+    return trimmed.length > 0 ? trimmed : profile.name;
 }
 
-- (NSString *)summaryForProfile:(OCProfile *)profile {
-    NSString *displayName = [self displayNameForProfile:profile];
-
-    NSMutableString *builder = [NSMutableString string];
-    [builder appendFormat:@"用户：%@\n", displayName];
-    [builder appendFormat:@"ID：%@\n", profile.userId];
-    [builder appendFormat:@"年龄：%ld\n", (long)profile.age.integerValue];
-
-    return [builder copy];
-}
-
-@end
-```
-
-这里使用：
-
-```text
-NSMutableString 构建内容
-copy 返回稳定的 NSString
-NSNull 显式表示空值
-isKindOfClass: 防止错误类型导致崩溃
-```
-
----
-
-## 练习 3：格式化创建时间
-
-在 `OCProfileFormatter.m` 中增加：
-
-```objc
-- (NSDateFormatter *)profileDateFormatter {
+- (NSDateFormatter *)makeDateFormatter {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     formatter.locale = [NSLocale localeWithLocaleIdentifier:@"zh_CN"];
     formatter.dateFormat = @"yyyy年MM月dd日 HH:mm";
     return formatter;
 }
-```
 
-然后扩展摘要：
-
-```objc
 - (NSString *)summaryForProfile:(OCProfile *)profile {
     NSString *displayName = [self displayNameForProfile:profile];
-    NSString *createdAtText = [[self profileDateFormatter]
+    NSString *createdAtText = [[self makeDateFormatter]
         stringFromDate:profile.createdAt];
+
+    NSString *ageText = @"未知";
+    NSInteger age = profile.age.integerValue;
+    if (age >= 0 && age <= 150) {
+        ageText = profile.age.stringValue;
+    }
 
     NSMutableString *builder = [NSMutableString string];
     [builder appendFormat:@"用户：%@\n", displayName];
     [builder appendFormat:@"ID：%@\n", profile.userId];
-    [builder appendFormat:@"年龄：%ld\n", (long)profile.age.integerValue];
+    [builder appendFormat:@"年龄：%@\n", ageText];
     [builder appendFormat:@"创建时间：%@\n", createdAtText];
 
     return [builder copy];
 }
-```
 
-思考：
-
-```text
-当前代码每次都创建 NSDateFormatter，适合练习但不适合高频调用。
-实际项目中应根据使用频率设计复用策略，同时避免跨线程修改同一实例。
-```
-
----
-
-## 练习 4：计算账号创建后的第 7 天
-
-在 formatter 中增加：
-
-```objc
-- (NSDate *)seventhDayAfterDate:(NSDate *)date {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDateComponents *components = [[NSDateComponents alloc] init];
-    components.day = 7;
-
-    return [calendar dateByAddingComponents:components
-                                     toDate:date
-                                    options:0];
-}
-```
-
-调用：
-
-```objc
-NSDate *seventhDay = [formatter seventhDayAfterDate:profile.createdAt];
-NSString *text = [[formatter profileDateFormatter] stringFromDate:seventhDay];
-NSLog(@"第 7 天：%@", text);
-```
-
-不要简单写：
-
-```objc
-[date dateByAddingTimeInterval:7 * 24 * 60 * 60]
-```
-
-如果需求表达的是“日历上的第七天”，应优先使用 `NSCalendar`。
-
----
-
-## 练习 5：生成用户详情 URL
-
-在 `OCProfileFormatter.h` 增加：
-
-```objc
-- (nullable NSURL *)detailURLForProfile:(OCProfile *)profile;
-```
-
-实现：
-
-```objc
 - (NSURL *)detailURLForProfile:(OCProfile *)profile {
     NSURLComponents *components = [[NSURLComponents alloc] init];
     components.scheme = @"https";
@@ -243,64 +178,42 @@ NSLog(@"第 7 天：%@", text);
     components.path = @"/profile/detail";
     components.queryItems = @[
         [NSURLQueryItem queryItemWithName:@"userId" value:profile.userId],
-        [NSURLQueryItem queryItemWithName:@"name" value:profile.name]
+        [NSURLQueryItem queryItemWithName:@"name" value:profile.name],
+        [NSURLQueryItem queryItemWithName:@"createdAt"
+                                   value:@(profile.createdAt.timeIntervalSince1970).stringValue]
     ];
-
     return components.URL;
 }
+
+- (NSDate *)seventhDayAfterDate:(NSDate *)date {
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    NSDateComponents *delta = [[NSDateComponents alloc] init];
+    delta.day = 7;
+
+    return [calendar dateByAddingComponents:delta
+                                     toDate:date
+                                    options:0];
+}
+
+@end
 ```
 
-测试中文和空格：
+关键点：
 
-```objc
-OCProfile *profile = [[OCProfile alloc]
-    initWithUserId:@"1001"
-    name:@"Objective-C 学习者"
-    age:@18
-    nickname:[NSNull null]
-    createdAt:[NSDate date]];
-
-NSLog(@"%@", [formatter detailURLForProfile:profile].absoluteString);
-```
-
-观察 `NSURLComponents` 如何处理需要编码的查询参数。
-
----
-
-## 练习 6：摘要与 NSData 转换
-
-把摘要编码成 UTF-8 数据：
-
-```objc
-NSString *summary = [formatter summaryForProfile:profile];
-NSData *data = [summary dataUsingEncoding:NSUTF8StringEncoding];
-
-NSLog(@"data length = %lu", (unsigned long)data.length);
-```
-
-再还原：
-
-```objc
-NSString *restored = [[NSString alloc]
-    initWithData:data
-    encoding:NSUTF8StringEncoding];
-
-NSLog(@"restored:\n%@", restored);
-```
-
-写入临时目录：
-
-```objc
-NSString *path = [NSTemporaryDirectory()
-    stringByAppendingPathComponent:@"profile-summary.txt"];
-
-BOOL success = [data writeToFile:path atomically:YES];
-NSLog(@"write=%@ path=%@", success ? @"YES" : @"NO", path);
+```text
+NSNull 需要显式处理
+isKindOfClass: 防止错误类型
+NSMutableString 用于构建，最终 copy 为 NSString
+NSDateFormatter 负责展示
+NSCalendar 负责日历计算
+NSURLComponents 负责安全构建 URL
 ```
 
 ---
 
-## 练习 7：完整 main.m
+## 4. 完整运行代码
+
+### main.m
 
 ```objc
 #import <Foundation/Foundation.h>
@@ -324,11 +237,27 @@ int main(int argc, const char * argv[]) {
         NSURL *url = [formatter detailURLForProfile:profile];
         NSLog(@"URL = %@", url.absoluteString);
 
+        NSDate *seventhDay = [formatter seventhDayAfterDate:profile.createdAt];
+        NSLog(@"seventh day = %@", seventhDay);
+
         NSData *data = [summary dataUsingEncoding:NSUTF8StringEncoding];
+        NSLog(@"data length = %lu", (unsigned long)data.length);
+
         NSString *restored = [[NSString alloc]
             initWithData:data
             encoding:NSUTF8StringEncoding];
         NSLog(@"restored = %@", restored);
+
+        NSString *path = [NSTemporaryDirectory()
+            stringByAppendingPathComponent:@"profile-summary.txt"];
+        BOOL success = [data writeToFile:path atomically:YES];
+        NSLog(@"write=%@ path=%@", success ? @"YES" : @"NO", path);
+
+        NSData *readData = [NSData dataWithContentsOfFile:path];
+        NSString *readText = [[NSString alloc]
+            initWithData:readData
+            encoding:NSUTF8StringEncoding];
+        NSLog(@"read = %@", readText);
     }
 
     return 0;
@@ -337,9 +266,9 @@ int main(int argc, const char * argv[]) {
 
 ---
 
-## 练习 8：故意制造并修复错误
+## 5. 验证字符串比较
 
-### 错误 A：字符串使用 `==`
+错误写法：
 
 ```objc
 if (profile.name == @"Yuhui") {
@@ -347,7 +276,7 @@ if (profile.name == @"Yuhui") {
 }
 ```
 
-改为：
+正确写法：
 
 ```objc
 if ([profile.name isEqualToString:@"Yuhui"]) {
@@ -355,102 +284,115 @@ if ([profile.name isEqualToString:@"Yuhui"]) {
 }
 ```
 
-### 错误 B：只判断 nil
+解释：
 
-```objc
-if (profile.nickname != nil) {
-    NSLog(@"%@", profile.nickname);
-}
-```
-
-`nickname` 仍可能是 `NSNull`。需要同时处理：
-
-```objc
-if (profile.nickname != nil && profile.nickname != [NSNull null]) {
-    NSLog(@"%@", profile.nickname);
-}
-```
-
-### 错误 C：手工拼接 URL
-
-```objc
-NSString *urlText = [NSString stringWithFormat:
-    @"https://example.com/profile?name=%@", profile.name];
-```
-
-改为 `NSURLComponents + NSURLQueryItem`。
-
-### 错误 D：把任意 NSData 当 UTF-8 文本
-
-只有确认数据编码是 UTF-8 时，才能安全使用：
-
-```objc
-[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]
+```text
+==                比较对象地址
+isEqualToString:  比较字符串内容
 ```
 
 ---
 
-## 扩展任务
+## 6. 验证 nil 与 NSNull
 
-### 任务 1：年龄校验
-
-当年龄小于 0 或大于 150 时，在摘要中输出：
-
-```text
-年龄：未知
-```
-
-### 任务 2：昵称规范化
-
-支持：
-
-```text
-nil
-NSNull
-空字符串
-全空格字符串
-正常字符串
-```
-
-最终只有正常字符串才能作为展示名。
-
-提示：
+依次测试：
 
 ```objc
-[string stringByTrimmingCharactersInSet:
-    [NSCharacterSet whitespaceAndNewlineCharacterSet]]
+profile.nickname = nil;
+profile.nickname = [NSNull null];
+profile.nickname = @"";
+profile.nickname = @"   ";
+profile.nickname = @"YP";
+profile.nickname = @100;
 ```
 
-### 任务 3：URL 增加时间参数
-
-在查询参数中加入：
-
-```text
-createdAt=<时间戳>
-```
-
-提示：
-
-```objc
-NSNumber *timestamp = @(profile.createdAt.timeIntervalSince1970);
-NSString *value = timestamp.stringValue;
-```
-
-### 任务 4：读取已写入文件
-
-使用：
-
-```objc
-[NSData dataWithContentsOfFile:path]
-```
-
-读取并恢复摘要。
+预期：只有有效的非空字符串才作为展示名，其他情况回退到 `profile.name`。
 
 ---
 
-## 完成标准
+## 7. 验证 NSNumber
 
-你需要能回答：
+```objc
+profile.age = @18;
+NSLog(@"%ld", (long)profile.age.integerValue);
+
+profile.age = @(-1);
+NSLog(@"%@", [formatter summaryForProfile:profile]);
+
+profile.age = @200;
+NSLog(@"%@", [formatter summaryForProfile:profile]);
+```
+
+观察 `NSNumber` 的包装与拆箱，以及年龄校验逻辑。
+
+---
+
+## 8. 验证 URL 编码
+
+```objc
+profile.name = @"Objective-C 学习者 & iOS";
+NSURL *url = [formatter detailURLForProfile:profile];
+NSLog(@"%@", url.absoluteString);
+```
+
+观察空格、中文和 `&` 如何被 `NSURLComponents` 正确处理。
+
+---
+
+## 9. 验证 NSData
+
+```objc
+NSData *data = [@"Hello Foundation"
+    dataUsingEncoding:NSUTF8StringEncoding];
+
+NSString *text = [[NSString alloc]
+    initWithData:data
+    encoding:NSUTF8StringEncoding];
+```
+
+注意：只有确认数据编码时，才能按 UTF-8 还原字符串。图片或压缩包等任意二进制数据不能直接按文本理解。
+
+---
+
+## 10. 扩展任务
+
+### 任务 A：日期格式复用
+
+当前 `makeDateFormatter` 每次创建实例。尝试设计一个只读、固定配置的复用方案，并思考共享实例的线程约束。
+
+### 任务 B：文件 URL
+
+把字符串路径改成：
+
+```objc
+NSURL *fileURL = [NSURL fileURLWithPath:path];
+```
+
+尝试使用 `writeToURL:options:error:` 写入。
+
+### 任务 C：增加评分
+
+为 `OCProfile` 增加：
+
+```objc
+@property (nonatomic, strong) NSNumber *score;
+```
+
+摘要中保留一位小数。
+
+### 任务 D：修改外部可变字符串
+
+```objc
+NSMutableString *source = [NSMutableString stringWithString:@"Alice"];
+profile.name = source;
+[source appendString:@" changed"];
+```
+
+验证 `profile.name` 是否变化，并解释 `copy` 的作用。
+
+---
+
+## 11. 完成标准
 
 ```text
 1. NSString 为什么是不可变对象？
@@ -461,19 +403,6 @@ NSString *value = timestamp.stringValue;
 6. 为什么 URL 查询参数应该使用 NSURLComponents？
 7. NSData 如何和 UTF-8 字符串互相转换？
 8. nil 和 NSNull 有什么区别？
-9. 为什么构建阶段可以使用 NSMutableString，输出时返回 NSString？
-10. 如何避免错误类型或 NSNull 导致消息发送崩溃？
-```
-
----
-
-## 建议项目结构
-
-```text
-FoundationTypesLab/
-├── main.m
-├── OCProfile.h
-├── OCProfile.m
-├── OCProfileFormatter.h
-└── OCProfileFormatter.m
+9. 为什么构建阶段使用 NSMutableString，输出时返回 NSString？
+10. 如何避免错误类型或 NSNull 导致崩溃？
 ```
