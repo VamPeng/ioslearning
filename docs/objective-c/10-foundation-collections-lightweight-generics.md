@@ -2,7 +2,7 @@
 
 ## 1. 学习目标
 
-Foundation Collection 是 Objective-C 项目中组织对象数据的核心工具。本章重点解决三个问题：
+Foundation Collection 是 Objective-C 项目中组织对象数据的核心工具。本章重点解决：
 
 ```text
 1. 应该使用数组、字典还是集合？
@@ -18,21 +18,22 @@ NSDictionary / NSMutableDictionary
 NSSet / NSMutableSet
 NSOrderedSet / NSMutableOrderedSet
 轻量泛型
-集合遍历、过滤、排序和复制
-nil / NSNull 在集合中的处理
+遍历、排序、过滤、复制
+nil / NSNull
 ```
 
 一句话：
 
 ```text
-Foundation Collection = 用不同的数据结构组织对象；轻量泛型 = 给编译器和 Swift 补充元素类型信息。
+Foundation Collection = 使用不同数据结构组织对象。
+轻量泛型 = 为编译器、调用者和 Swift 补充元素类型信息。
 ```
 
 ---
 
-## 2. 集合只能直接保存对象
+## 2. 集合保存对象
 
-Foundation 集合保存的是 Objective-C 对象：
+Foundation 集合直接保存 Objective-C 对象：
 
 ```objc
 NSArray *values = @[
@@ -42,7 +43,7 @@ NSArray *values = @[
 ];
 ```
 
-基础值需要先包装成对象：
+基础数值需要包装为 `NSNumber`：
 
 ```objc
 NSInteger age = 18;
@@ -54,15 +55,13 @@ NSArray *values = @[
 ];
 ```
 
-结构体通常使用 `NSValue` 包装：
+结构体通常使用 `NSValue`：
 
 ```objc
 NSRange range = NSMakeRange(2, 5);
 NSValue *value = [NSValue valueWithRange:range];
-NSArray *ranges = @[value];
+NSArray<NSValue *> *ranges = @[value];
 ```
-
-统一理解：
 
 ```text
 NSInteger / BOOL / double     基础值
@@ -74,8 +73,6 @@ NSValue                       通用值包装
 ---
 
 ## 3. NSArray：有序、可重复、不可变
-
-`NSArray` 适合表示一个有顺序的对象列表：
 
 ```objc
 NSArray<NSString *> *names = @[
@@ -89,8 +86,8 @@ NSArray<NSString *> *names = @[
 
 ```text
 有顺序
-允许重复元素
-通过下标访问
+允许重复
+支持下标访问
 创建后不能增删元素
 ```
 
@@ -105,13 +102,13 @@ BOOL contains = [names containsObject:@"Bob"];
 NSUInteger index = [names indexOfObject:@"Bob"];
 ```
 
-注意下标越界：
+数组下标越界会产生运行时异常：
 
 ```objc
-NSString *value = names[10]; // 运行时异常
+NSString *value = names[10];
 ```
 
-安全访问通常先判断：
+安全访问：
 
 ```objc
 NSUInteger index = 10;
@@ -123,7 +120,7 @@ if (index < names.count) {
 
 ---
 
-## 4. NSArray 常用创建方式
+## 4. NSArray 创建方式
 
 字面量：
 
@@ -137,28 +134,18 @@ NSArray<NSString *> *names = @[@"Alice", @"Bob"];
 NSArray<NSString *> *names = [NSArray arrayWithObjects:@"Alice", @"Bob", nil];
 ```
 
-从另一个数组创建：
-
-```objc
-NSArray<NSString *> *copy = [NSArray arrayWithArray:names];
-```
-
-注意旧式 `arrayWithObjects:` 使用 `nil` 作为参数结束标记：
+旧式 `arrayWithObjects:` 使用 `nil` 作为结束标记：
 
 ```objc
 NSString *nickname = nil;
 NSArray *values = [NSArray arrayWithObjects:@"Alice", nickname, @"Bob", nil];
 ```
 
-最终数组只有 `Alice`，因为遇到 `nil` 后参数列表提前结束。
-
-因此新代码优先使用数组字面量，并在数据可能为空时显式处理。
+这里会在 `nickname` 处结束，后面的 `Bob` 不会进入数组。新代码优先使用字面量，并显式处理空值。
 
 ---
 
 ## 5. NSMutableArray：可变有序集合
-
-需要动态增删元素时使用 `NSMutableArray`：
 
 ```objc
 NSMutableArray<NSString *> *names = [NSMutableArray array];
@@ -166,42 +153,23 @@ NSMutableArray<NSString *> *names = [NSMutableArray array];
 [names addObject:@"Alice"];
 [names addObject:@"Bob"];
 [names insertObject:@"Carol" atIndex:1];
+names[0] = @"Updated";
 [names removeObject:@"Bob"];
 [names removeObjectAtIndex:0];
-```
-
-替换元素：
-
-```objc
-names[0] = @"Updated";
-```
-
-批量追加：
-
-```objc
 [names addObjectsFromArray:@[@"David", @"Eve"]];
-```
-
-清空：
-
-```objc
 [names removeAllObjects];
 ```
 
-区别：
-
 ```text
-NSArray           创建后集合结构不可修改
+NSArray           集合结构不可修改
 NSMutableArray    可以增删、插入、替换和清空
 ```
 
-这里的“不可变”指的是集合结构不可变，不代表数组内部对象的状态一定不可变。
+不可变数组只保证集合结构不可变，不保证其中元素的内部状态不可变。
 
 ---
 
 ## 6. 不可变集合不等于元素不可变
-
-例如：
 
 ```objc
 NSMutableString *name = [NSMutableString stringWithString:@"Alice"];
@@ -211,23 +179,11 @@ NSArray<NSMutableString *> *names = @[name];
 NSLog(@"%@", names.firstObject);
 ```
 
-虽然 `names` 是不可变数组，但它保存的对象仍然可以被修改。
-
-统一理解：
-
-```text
-NSArray 不可变
-    ↓
-不能改变数组的元素数量和位置
-    ↓
-但数组持有的可变对象仍然可能改变内部状态
-```
+`NSArray` 不能增删元素，但它持有的 `NSMutableString` 仍然可以变化。
 
 ---
 
 ## 7. NSDictionary：Key-Value 映射
-
-`NSDictionary` 适合通过唯一 Key 查找 Value：
 
 ```objc
 NSDictionary<NSString *, id> *user = @{
@@ -242,10 +198,8 @@ NSDictionary<NSString *, id> *user = @{
 ```objc
 NSString *name = user[@"name"];
 NSNumber *age = user[@"age"];
-id missing = user[@"missing"]; // 返回 nil
+id missing = user[@"missing"]; // nil
 ```
-
-常用属性：
 
 ```objc
 NSUInteger count = user.count;
@@ -253,35 +207,24 @@ NSArray *keys = user.allKeys;
 NSArray *values = user.allValues;
 ```
 
-判断 Key 是否存在：
-
-```objc
-id value = user[@"nickname"];
-if (value != nil) {
-    NSLog(@"%@", value);
-}
-```
-
-注意：
+重要区别：
 
 ```text
-字典查不到 Key 时返回 nil。
-数组下标越界时通常直接抛出异常。
+字典找不到 Key       返回 nil
+数组下标越界          通常抛出异常
 ```
 
 ---
 
-## 8. NSDictionary 的 Key 约束
+## 8. 字典 Key 的约束
 
-字典 Key 必须符合 `NSCopying` 协议。最常见的 Key 类型是：
+字典 Key 必须符合 `NSCopying`。常见 Key：
 
 ```text
 NSString
 NSNumber
 NSDate
 ```
-
-字符串 Key 最常用：
 
 ```objc
 NSDictionary<NSString *, NSString *> *headers = @{
@@ -290,13 +233,19 @@ NSDictionary<NSString *, NSString *> *headers = @{
 };
 ```
 
-字典创建时会复制 Key，因此自定义对象作为 Key 时，必须正确实现 `NSCopying`，同时还要正确实现 `isEqual:` 和 `hash`。
+自定义对象作为 Key 时，需要正确实现：
 
-普通业务代码中，优先使用稳定、不可变的字符串或数字作为 Key。
+```text
+NSCopying
+isEqual:
+hash
+```
+
+普通业务代码优先使用稳定、不可变的字符串或数字作为 Key。
 
 ---
 
-## 9. NSMutableDictionary：可变键值映射
+## 9. NSMutableDictionary
 
 ```objc
 NSMutableDictionary<NSString *, id> *user = [NSMutableDictionary dictionary];
@@ -304,23 +253,17 @@ NSMutableDictionary<NSString *, id> *user = [NSMutableDictionary dictionary];
 user[@"name"] = @"Yuhui";
 user[@"age"] = @18;
 [user setObject:@YES forKey:@"enabled"];
-```
 
-修改和删除：
-
-```objc
 user[@"name"] = @"Updated";
 [user removeObjectForKey:@"enabled"];
 [user removeAllObjects];
 ```
 
-特殊行为：
+使用下标赋值 `nil` 会删除 Key：
 
 ```objc
 user[@"nickname"] = nil;
 ```
-
-对可变字典使用下标语法赋值 `nil`，等价于删除这个 Key，而不是保存空值。
 
 需要表达“Key 存在，但值为空”时使用：
 
@@ -332,25 +275,23 @@ user[@"nickname"] = [NSNull null];
 
 ## 10. nil 与 NSNull
 
-Foundation Collection 不能直接保存 `nil`：
+集合不能直接保存 `nil`：
 
 ```objc
 NSString *nickname = nil;
 NSArray *values = @[@"Alice", nickname]; // 运行时异常
 ```
 
-因为 `nil` 表示“没有对象”，无法作为一个真实元素存进集合。
-
-需要保存空值占位时使用：
+使用 `NSNull` 占位：
 
 ```objc
 NSArray *values = @[
     @"Alice",
-    [NSNull null]
+    nickname ?: [NSNull null]
 ];
 ```
 
-读取时判断：
+读取：
 
 ```objc
 id value = values[1];
@@ -358,8 +299,6 @@ if (value == [NSNull null]) {
     NSLog(@"empty value");
 }
 ```
-
-统一理解：
 
 ```text
 nil        没有对象
@@ -370,8 +309,6 @@ NSNull     一个真实存在的空值占位对象
 
 ## 11. NSSet：无序、唯一集合
 
-`NSSet` 适合表达“不重复成员集合”：
-
 ```objc
 NSSet<NSString *> *tags = [NSSet setWithArray:@[
     @"ios",
@@ -381,8 +318,6 @@ NSSet<NSString *> *tags = [NSSet setWithArray:@[
 ```
 
 最终只保留两个不同元素。
-
-常用操作：
 
 ```objc
 NSUInteger count = tags.count;
@@ -400,21 +335,12 @@ BOOL intersects = [a intersectsSet:b];
 BOOL subset = [a isSubsetOfSet:b];
 ```
 
-选择原则：
-
-```text
-需要顺序、允许重复      NSArray
-通过 Key 查 Value       NSDictionary
-只关心唯一成员          NSSet
-```
-
 ---
 
 ## 12. NSMutableSet 与集合运算
 
 ```objc
 NSMutableSet<NSString *> *tags = [NSMutableSet set];
-
 [tags addObject:@"ios"];
 [tags addObject:@"swift"];
 [tags addObject:@"ios"];
@@ -424,29 +350,27 @@ NSMutableSet<NSString *> *tags = [NSMutableSet set];
 并集：
 
 ```objc
-NSMutableSet *result = [a mutableCopy];
-[result unionSet:b];
+NSMutableSet *unionResult = [a mutableCopy];
+[unionResult unionSet:b];
 ```
 
 交集：
 
 ```objc
-NSMutableSet *result = [a mutableCopy];
-[result intersectSet:b];
+NSMutableSet *intersection = [a mutableCopy];
+[intersection intersectSet:b];
 ```
 
 差集：
 
 ```objc
-NSMutableSet *result = [a mutableCopy];
-[result minusSet:b];
+NSMutableSet *difference = [a mutableCopy];
+[difference minusSet:b];
 ```
 
 ---
 
 ## 13. NSOrderedSet：有序且唯一
-
-当你既需要顺序，又要求元素唯一时，可以使用 `NSOrderedSet`：
 
 ```objc
 NSOrderedSet<NSString *> *items = [NSOrderedSet orderedSetWithArray:@[
@@ -456,13 +380,7 @@ NSOrderedSet<NSString *> *items = [NSOrderedSet orderedSetWithArray:@[
 ]];
 ```
 
-结果保持：
-
-```text
-A, B
-```
-
-常用访问：
+结果是 `A, B`。
 
 ```objc
 NSString *first = items.firstObject;
@@ -472,11 +390,35 @@ NSUInteger index = [items indexOfObject:@"B"];
 
 动态修改使用 `NSMutableOrderedSet`。
 
-它不如 `NSArray`、`NSDictionary`、`NSSet` 常见，但在“有序去重”场景中很合适。
+---
+
+## 14. 集合选择
+
+| 需求 | 推荐类型 |
+|---|---|
+| 有序列表，允许重复 | `NSArray` |
+| 动态增删的有序列表 | `NSMutableArray` |
+| Key-Value 查询 | `NSDictionary` |
+| 动态修改 Key-Value | `NSMutableDictionary` |
+| 唯一成员集合 | `NSSet` |
+| 动态唯一集合 | `NSMutableSet` |
+| 有序且唯一 | `NSOrderedSet` |
+
+```text
+是否通过 Key 查询？
+├── 是：NSDictionary
+└── 否
+    ↓
+是否要求元素唯一？
+├── 是
+│   ├── 需要顺序：NSOrderedSet
+│   └── 不需要顺序：NSSet
+└── 否：NSArray
+```
 
 ---
 
-## 14. 集合快速遍历
+## 15. 快速遍历
 
 数组：
 
@@ -495,15 +437,7 @@ for (NSString *key in user) {
 }
 ```
 
-集合：
-
-```objc
-for (NSString *tag in tags) {
-    NSLog(@"%@", tag);
-}
-```
-
-需要下标时：
+带下标和停止条件：
 
 ```objc
 [names enumerateObjectsUsingBlock:^(NSString *name, NSUInteger index, BOOL *stop) {
@@ -515,27 +449,13 @@ for (NSString *tag in tags) {
 }];
 ```
 
-字典 Block 遍历：
-
-```objc
-[user enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-    NSLog(@"%@ = %@", key, value);
-}];
-```
-
 ---
 
-## 15. 遍历过程中不要直接修改集合
+## 16. 遍历过程中不要修改原集合
 
-错误示例：
+错误：
 
 ```objc
-NSMutableArray<NSString *> *names = [NSMutableArray arrayWithArray:@[
-    @"Alice",
-    @"",
-    @"Bob"
-]];
-
 for (NSString *name in names) {
     if (name.length == 0) {
         [names removeObject:name];
@@ -543,13 +463,13 @@ for (NSString *name in names) {
 }
 ```
 
-这可能触发：
+可能触发：
 
 ```text
 Collection was mutated while being enumerated
 ```
 
-安全方式一：先记录待删除对象：
+方式一：先收集待删除元素：
 
 ```objc
 NSMutableArray<NSString *> *invalid = [NSMutableArray array];
@@ -563,10 +483,10 @@ for (NSString *name in names) {
 [names removeObjectsInArray:invalid];
 ```
 
-安全方式二：反向按下标删除：
+方式二：反向按下标删除：
 
 ```objc
-for (NSInteger index = names.count - 1; index >= 0; index--) {
+for (NSInteger index = (NSInteger)names.count - 1; index >= 0; index--) {
     NSString *name = names[(NSUInteger)index];
     if (name.length == 0) {
         [names removeObjectAtIndex:(NSUInteger)index];
@@ -574,21 +494,22 @@ for (NSInteger index = names.count - 1; index >= 0; index--) {
 }
 ```
 
+必须在减一之前把 `count` 转为有符号整数，避免空数组时发生无符号下溢。
+
 ---
 
-## 16. 排序
+## 17. 排序
 
-字符串数组排序：
+字符串排序：
 
 ```objc
 NSArray<NSString *> *sorted = [names sortedArrayUsingSelector:@selector(compare:)];
 ```
 
-使用 Comparator：
+数字排序：
 
 ```objc
 NSArray<NSNumber *> *numbers = @[@3, @1, @2];
-
 NSArray<NSNumber *> *sorted = [numbers sortedArrayUsingComparator:^NSComparisonResult(
     NSNumber *left,
     NSNumber *right
@@ -597,7 +518,7 @@ NSArray<NSNumber *> *sorted = [numbers sortedArrayUsingComparator:^NSComparisonR
 }];
 ```
 
-对象数组排序：
+对象排序：
 
 ```objc
 NSArray<OCUser *> *sortedUsers = [users sortedArrayUsingComparator:^NSComparisonResult(
@@ -608,27 +529,32 @@ NSArray<OCUser *> *sortedUsers = [users sortedArrayUsingComparator:^NSComparison
 }];
 ```
 
-原数组不会改变，排序方法返回新数组。
+排序方法返回新数组，原数组不变。
 
 ---
 
-## 17. 过滤与查找
+## 18. 过滤与查找
 
-使用 `NSPredicate` 过滤：
+`NSPredicate` 的 Block 接口接收 `id`，在 Block 内执行类型检查或转换：
 
 ```objc
 NSArray<NSNumber *> *numbers = @[@1, @2, @3, @4];
 NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(
-    NSNumber *value,
-    NSDictionary *bindings
+    id object,
+    NSDictionary<NSString *, id> *bindings
 ) {
+    if (![object isKindOfClass:[NSNumber class]]) {
+        return NO;
+    }
+
+    NSNumber *value = object;
     return value.integerValue % 2 == 0;
 }];
 
 NSArray<NSNumber *> *evenNumbers = [numbers filteredArrayUsingPredicate:predicate];
 ```
 
-查找对象下标：
+查找：
 
 ```objc
 NSUInteger index = [names indexOfObject:@"Bob"];
@@ -636,8 +562,6 @@ if (index != NSNotFound) {
     NSLog(@"found at %lu", (unsigned long)index);
 }
 ```
-
-根据条件查找：
 
 ```objc
 NSUInteger index = [names indexOfObjectPassingTest:^BOOL(
@@ -651,45 +575,27 @@ NSUInteger index = [names indexOfObjectPassingTest:^BOOL(
 
 ---
 
-## 18. copy 与 mutableCopy
-
-不可变数组复制：
+## 19. copy 与 mutableCopy
 
 ```objc
 NSArray *source = @[@"A", @"B"];
 NSArray *copied = [source copy];
-```
-
-获得可变副本：
-
-```objc
 NSMutableArray *mutable = [source mutableCopy];
-[mutable addObject:@"C"];
 ```
 
-可变集合转不可变：
+可变集合转不可变快照：
 
 ```objc
-NSMutableArray *mutable = [NSMutableArray arrayWithObject:@"A"];
-NSArray *snapshot = [mutable copy];
+NSMutableArray *source = [NSMutableArray arrayWithObject:@"A"];
+NSArray *snapshot = [source copy];
 ```
-
-常见理解：
 
 ```text
 copy          通常得到不可变集合
 mutableCopy   通常得到可变集合
 ```
 
-但集合复制默认通常是浅复制：
-
-```text
-新集合对象
-    ↓
-仍然引用原来的元素对象
-```
-
-示例：
+集合复制默认通常是浅复制：
 
 ```objc
 NSMutableString *name = [NSMutableString stringWithString:@"Alice"];
@@ -700,36 +606,28 @@ NSArray *copied = [source copy];
 NSLog(@"%@", copied.firstObject);
 ```
 
-复制集合不等于深复制每个元素。
+新集合仍然引用原来的元素对象。
 
 ---
 
-## 19. 集合属性的内存语义
+## 20. 集合属性的内存语义
 
-常见不可变集合属性：
+不可变集合属性通常使用 `copy`：
 
 ```objc
 @property (nonatomic, copy) NSArray<OCUser *> *users;
 @property (nonatomic, copy) NSDictionary<NSString *, OCUser *> *userMap;
 ```
 
-这样可以避免外部传入可变集合后继续修改集合结构：
+这样可以阻止外部传入的可变集合继续改变内部集合结构。
 
-```objc
-NSMutableArray *source = [NSMutableArray arrayWithObject:user];
-controller.users = source;
-[source removeAllObjects];
-```
-
-如果属性是 `copy`，内部数组结构不会受外部后续修改影响。
-
-需要暴露可变集合时：
+需要内部修改时：
 
 ```objc
 @property (nonatomic, strong) NSMutableArray<OCUser *> *mutableUsers;
 ```
 
-但公开可变集合会增加状态管理难度。更稳妥的方式通常是：
+推荐边界：
 
 ```text
 内部维护 NSMutableArray
@@ -739,16 +637,14 @@ controller.users = source;
 
 ---
 
-## 20. 轻量泛型
+## 21. 轻量泛型
 
-没有泛型标注：
+没有类型标注：
 
 ```objc
 NSArray *users;
 NSDictionary *userMap;
 ```
-
-编译器只知道它们是集合，不知道内部元素类型。
 
 加入轻量泛型：
 
@@ -758,15 +654,15 @@ NSDictionary<NSString *, OCUser *> *userMap;
 NSSet<NSString *> *tags;
 ```
 
-好处：
+作用：
 
 ```text
-1. 编译器能够提供更准确的类型检查和补全
-2. 阅读接口时可以直接知道元素类型
-3. Swift 调用 Objective-C 时能获得更精确的桥接类型
+编译器提供更准确的类型检查和补全
+头文件直接表达元素类型
+Swift 桥接得到更准确的集合类型
 ```
 
-Swift 侧通常会获得类似：
+Swift 侧通常类似：
 
 ```swift
 let users: [OCUser]
@@ -776,89 +672,61 @@ let tags: Set<String>
 
 ---
 
-## 21. 轻量泛型不是完整运行时类型约束
-
-下面声明了字符串数组：
+## 22. 轻量泛型的限制
 
 ```objc
 NSMutableArray<NSString *> *names = [NSMutableArray array];
-```
-
-正常添加：
-
-```objc
 [names addObject:@"Alice"];
+[names addObject:@18]; // 通常产生类型警告
 ```
 
-添加错误类型通常会出现编译器警告：
-
-```objc
-[names addObject:@18];
-```
-
-但 Objective-C 的轻量泛型主要是编译期标注，不像 Java 泛型或 Swift 泛型那样提供完整、强约束的类型系统能力。
-
-通过弱类型 API、强制转换或运行时动态调用，仍可能把错误类型放进集合。
-
-因此：
+轻量泛型主要是编译期标注。通过弱类型 API、强制转换、旧代码或运行时动态调用，仍可能进入错误类型。
 
 ```text
 轻量泛型提高安全性和可读性
 但不能替代运行时输入校验
 ```
 
-网络 JSON、第三方 SDK 和旧代码边界仍然要检查真实对象类型。
+外部 JSON、第三方 SDK 和旧代码边界必须检查真实对象类型。
 
 ---
 
-## 22. id、泛型与运行时检查
-
-异构字典经常声明为：
+## 23. 动态字典安全读取
 
 ```objc
 NSDictionary<NSString *, id> *payload = @{
     @"name": @"Yuhui",
     @"age": @18,
-    @"tags": @[@"ios", @"swift"]
+    @"nickname": [NSNull null]
 };
 ```
 
-读取后应根据真实类型判断：
-
 ```objc
 id rawName = payload[@"name"];
-
 if ([rawName isKindOfClass:[NSString class]]) {
     NSString *name = rawName;
     NSLog(@"%@", name);
 }
 ```
 
-处理 `NSNull`：
-
 ```objc
 id rawNickname = payload[@"nickname"];
-
-if (rawNickname != nil && rawNickname != [NSNull null]) {
-    if ([rawNickname isKindOfClass:[NSString class]]) {
-        NSString *nickname = rawNickname;
-        NSLog(@"%@", nickname);
-    }
+if (rawNickname != nil &&
+    rawNickname != [NSNull null] &&
+    [rawNickname isKindOfClass:[NSString class]]) {
+    NSString *nickname = rawNickname;
+    NSLog(@"%@", nickname);
 }
 ```
 
-常见边界：
-
 ```text
-自己维护的强类型模型          使用明确轻量泛型
-JSON / 动态字典              使用 id，并执行类型检查
+内部强类型模型      使用明确轻量泛型
+JSON / 动态字典     使用 id，并执行类型检查
 ```
 
 ---
 
-## 23. 自定义轻量泛型类
-
-Objective-C 也可以为自定义类声明轻量泛型：
+## 24. 自定义轻量泛型类
 
 ```objc
 @interface OCBox<ObjectType> : NSObject
@@ -880,51 +748,7 @@ OCBox<NSNumber *> *ageBox = [[OCBox alloc] initWithValue:@18];
 NSNumber *age = ageBox.value;
 ```
 
-实现文件通常写成：
-
-```objc
-@implementation OCBox
-
-- (instancetype)initWithValue:(id)value {
-    self = [super init];
-    if (self) {
-        _value = value;
-    }
-    return self;
-}
-
-@end
-```
-
-这里再次体现：泛型主要帮助头文件接口表达，运行时实现仍然基于 Objective-C 动态对象模型。
-
----
-
-## 24. 常见集合选择
-
-| 需求 | 推荐类型 |
-|---|---|
-| 有序列表，允许重复 | `NSArray` |
-| 动态增删的有序列表 | `NSMutableArray` |
-| Key-Value 查询 | `NSDictionary` |
-| 动态修改 Key-Value | `NSMutableDictionary` |
-| 唯一成员集合 | `NSSet` |
-| 动态唯一集合 | `NSMutableSet` |
-| 有序且唯一 | `NSOrderedSet` |
-
-判断顺序：
-
-```text
-是否通过 Key 查询？
-├── 是：NSDictionary
-└── 否
-    ↓
-是否要求元素唯一？
-├── 是
-│   ├── 需要顺序：NSOrderedSet
-│   └── 不需要顺序：NSSet
-└── 否：NSArray
-```
+轻量泛型主要帮助公开接口表达；Objective-C 运行时仍然基于动态对象模型。
 
 ---
 
@@ -933,15 +757,15 @@ NSNumber *age = ageBox.value;
 | Objective-C | Swift | Java / Android |
 |---|---|---|
 | `NSArray<T *> *` | `[T]` | `List<T>` |
-| `NSMutableArray<T *> *` | `Array` 的可变变量 | `ArrayList<T>` |
+| `NSMutableArray<T *> *` | 可变变量中的 `Array` | `ArrayList<T>` |
 | `NSDictionary<K, V> *` | `[K: V]` | `Map<K, V>` |
 | `NSMutableDictionary<K, V> *` | 可变 `Dictionary` | `HashMap<K, V>` |
 | `NSSet<T *> *` | `Set<T>` | `Set<T>` |
-| `NSOrderedSet<T *> *` | 无直接标准对应 | `LinkedHashSet<T>` 的部分语义 |
+| `NSOrderedSet<T *> *` | 无直接标准对应 | 部分接近 `LinkedHashSet<T>` |
 | `id` | `Any` | `Object` |
 | `NSNull` | `NSNull` | JSON null 占位对象 |
 
-注意：这些对照用于建立概念映射，不代表底层实现和语义完全相同。
+概念可对照，但底层实现和完整语义不一定相同。
 
 ---
 
@@ -966,85 +790,68 @@ NSArray *values = @[@"Alice", nickname ?: [NSNull null]];
 id value = values[values.count];
 ```
 
-有效最大下标是：
-
-```text
-count - 1
-```
+最大有效下标是 `count - 1`。
 
 ### 错误 3：遍历时修改集合
 
-```objc
-for (id value in mutableValues) {
-    [mutableValues removeObject:value];
-}
-```
+不要在快速遍历过程中直接增删原集合。
 
-应先收集待删除项，或反向按下标删除。
-
-### 错误 4：把 NSDictionary 当成固定类型模型
+### 错误 4：把动态字典当成固定模型
 
 ```objc
 NSString *age = payload[@"age"];
 ```
 
-真实值可能是 `NSNumber`、`NSNull` 或其他类型。动态数据边界必须检查类型。
+真实值可能是 `NSNumber`、`NSNull` 或其他类型。
 
 ### 错误 5：认为 copy 会深复制元素
 
 ```text
-集合 copy 通常只复制集合容器
+集合 copy 通常只复制容器
 内部元素对象仍可能共享
 ```
 
 ### 错误 6：把轻量泛型当成运行时强约束
 
-```text
-NSArray<NSString *> 主要提供编译期类型信息
-运行时仍需防御外部脏数据
-```
+外部动态数据仍需检查 `isKindOfClass:`。
 
 ---
 
 ## 27. 阅读项目代码的检查顺序
-
-看到一个集合属性时，按下面顺序判断：
 
 ```text
 1. 是 NSArray、NSDictionary 还是 NSSet？
 2. 是不可变还是 NSMutable 可变版本？
 3. 是否声明了轻量泛型？
 4. 属性使用 copy 还是 strong？
-5. 集合来源是内部构造还是外部 JSON？
-6. 元素是否可能包含 NSNull？
-7. 遍历时是否可能同时修改集合？
-8. 是否错误地依赖字典代替业务模型？
+5. 集合来自内部模型还是外部 JSON？
+6. 是否可能包含 NSNull？
+7. 遍历时是否同时修改集合？
+8. 是否错误地用字典长期代替业务模型？
 ```
 
 ---
 
 ## 28. 最低掌握标准
 
-学完这一章后，你至少要能回答：
-
 ```text
 1. NSArray、NSDictionary、NSSet 分别适合什么场景？
-2. NSArray 和 NSMutableArray 的核心区别是什么？
+2. NSArray 和 NSMutableArray 的区别是什么？
 3. Foundation Collection 为什么不能直接保存 nil？
 4. nil 和 NSNull 有什么区别？
 5. 为什么遍历 NSMutableArray 时不能直接删除元素？
 6. copy 和 mutableCopy 分别得到什么集合？
 7. 集合 copy 为什么通常不是深复制？
 8. NSArray<OCUser *> 的泛型标注有什么作用？
-9. 轻量泛型为什么不能完全替代运行时检查？
-10. JSON 字典中的 id 数据应该如何安全读取？
+9. 轻量泛型为什么不能替代运行时检查？
+10. JSON 字典中的 id 数据如何安全读取？
 ```
 
 完成标准：
 
 ```text
 能为业务数据选择正确集合类型
-能正确处理可变集合、nil、NSNull 和越界问题
+能处理可变集合、nil、NSNull 和越界
 能用轻量泛型表达集合元素类型
 能识别外部动态数据中的类型风险
 ```
