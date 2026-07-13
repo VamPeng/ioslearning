@@ -17,11 +17,11 @@
 10. KVO 回调线程
 ```
 
-这个 Lab 可以在 Xcode 的 macOS Command Line Tool 中运行，也可以把类放进 iOS App 工程。
+这个 Lab 可以在 Xcode 的 macOS Command Line Tool 中运行，也可以把这些类放进 iOS App 工程。
 
 ---
 
-## 练习结构
+## 工程结构
 
 ```text
 KVCKVOLab/
@@ -34,7 +34,7 @@ KVCKVOLab/
 
 ---
 
-## 练习 1：创建进度模型
+## 1. 创建学习进度模型
 
 ### OCStudyProgress.h
 
@@ -170,109 +170,27 @@ NS_ASSUME_NONNULL_END
 @end
 ```
 
-关键点：
+这里建立了两条关键链路：
 
 ```text
-progress 是计算属性
-completedLessons 和 totalLessons 是 progress 的依赖 Key
-通过 Setter 修改依赖字段时，progress 观察者也会收到通知
-外部字典必须经过 Key 白名单和类型校验
-NSNull 转成 nil 后，基础数值进入 setNilValueForKey:
+Payload
+   ↓ 白名单与类型检查
+setValue:forKey:
+   ↓
+模型属性
 ```
+
+```text
+completedLessons ─┐
+                  ├── progress
+ totalLessons ─────┘
+```
+
+`progress` 是计算属性，通过依赖 Key 声明，让它在两个基础字段变化时也产生 KVO 通知。
 
 ---
 
-## 练习 2：验证 KVC
-
-### main.m 第一部分
-
-```objc
-#import <Foundation/Foundation.h>
-#import "OCStudyProgress.h"
-
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        OCStudyProgress *progress = [[OCStudyProgress alloc]
-            initWithName:@"Objective-C"
-            completedLessons:3
-            totalLessons:10
-            tags:@[@"ios", @"objc"]];
-
-        NSString *name = [progress valueForKey:@"name"];
-        NSNumber *completed = [progress valueForKey:@"completedLessons"];
-        NSNumber *ratio = [progress valueForKey:@"progress"];
-
-        NSLog(@"name = %@", name);
-        NSLog(@"completed = %@", completed);
-        NSLog(@"progress = %@", ratio);
-
-        [progress setValue:@4 forKey:@"completedLessons"];
-        NSLog(@"updated progress = %@", [progress valueForKey:@"progress"]);
-    }
-
-    return 0;
-}
-```
-
-观察：
-
-```text
-NSInteger 通过 KVC 读取后得到 NSNumber
-NSNumber 通过 KVC 写入 NSInteger 属性时自动拆箱
-readonly 计算属性仍然可以通过 valueForKey: 读取
-```
-
----
-
-## 练习 3：动态 Payload 映射
-
-继续加入：
-
-```objc
-NSDictionary<NSString *, id> *payload = @{
-    @"name": @"Objective-C Advanced",
-    @"completedLessons": @7,
-    @"totalLessons": @15,
-    @"tags": @[@"objc", @"kvc", @"kvo"],
-    @"serverInternalField": @"ignored"
-};
-
-[progress applyPayload:payload];
-NSLog(@"after payload = %@", progress);
-```
-
-应观察到：
-
-```text
-允许字段被写入模型
-serverInternalField 被白名单拦截
-基础数值由 NSNumber 写入 NSInteger
-```
-
-测试 `NSNull`：
-
-```objc
-NSDictionary<NSString *, id> *nullPayload = @{
-    @"name": [NSNull null],
-    @"completedLessons": [NSNull null]
-};
-
-[progress applyPayload:nullPayload];
-
-NSLog(@"name = %@", progress.name);
-NSLog(@"completed = %ld", (long)progress.completedLessons);
-```
-
-结果：
-
-```text
-name = nil
-completedLessons = 0
-```
-
----
-
-## 练习 4：创建观察器
+## 2. 创建观察器
 
 ### OCProgressObserver.h
 
@@ -317,7 +235,6 @@ static void *ProgressNameContext = &ProgressNameContext;
     }
 
     [self stopObserving];
-
     self.observedProgress = progress;
 
     [progress addObserver:self
@@ -358,8 +275,8 @@ static void *ProgressNameContext = &ProgressNameContext;
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change
                        context:(void *)context {
     if (context == ProgressValueContext) {
-        NSNumber *oldValue = change[NSKeyValueChangeOldKey];
-        NSNumber *newValue = change[NSKeyValueChangeNewKey];
+        id oldValue = change[NSKeyValueChangeOldKey];
+        id newValue = change[NSKeyValueChangeNewKey];
 
         NSLog(@"progress changed: %@ -> %@ thread=%@",
               oldValue,
@@ -389,86 +306,104 @@ static void *ProgressNameContext = &ProgressNameContext;
 @end
 ```
 
-这里用两个 Context 区分两条观察关系：
+设计要点：
 
 ```text
-ProgressValueContext  → progress
-ProgressNameContext   → name
+ProgressValueContext  → progress 观察关系
+ProgressNameContext   → name 观察关系
+observing             → 防止重复注册或错误移除
+observedProgress      → 明确当前被观察对象
 ```
-
-不要只依赖字符串判断所有回调来源。
 
 ---
 
-## 练习 5：运行 KVO
+## 3. 完整运行示例
 
-在 `main.m` 中加入：
+### main.m
 
 ```objc
+#import <Foundation/Foundation.h>
+#import "OCStudyProgress.h"
 #import "OCProgressObserver.h"
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        OCStudyProgress *progress = [[OCStudyProgress alloc]
+            initWithName:@"Objective-C"
+            completedLessons:3
+            totalLessons:10
+            tags:@[@"ios", @"objc"]];
+
+        // 1. KVC 读取
+        NSString *name = [progress valueForKey:@"name"];
+        NSNumber *completed = [progress valueForKey:@"completedLessons"];
+        NSNumber *ratio = [progress valueForKey:@"progress"];
+
+        NSLog(@"name = %@", name);
+        NSLog(@"completed = %@", completed);
+        NSLog(@"progress = %@", ratio);
+
+        // 2. KVC 写入
+        [progress setValue:@4 forKey:@"completedLessons"];
+        NSLog(@"updated progress = %@", [progress valueForKey:@"progress"]);
+
+        // 3. 动态 Payload 映射
+        NSDictionary<NSString *, id> *payload = @{
+            @"name": @"Objective-C Advanced",
+            @"completedLessons": @7,
+            @"totalLessons": @15,
+            @"tags": @[@"objc", @"kvc", @"kvo"],
+            @"serverInternalField": @"ignored"
+        };
+
+        [progress applyPayload:payload];
+        NSLog(@"after payload = %@", progress);
+
+        // 4. 注册观察
+        OCProgressObserver *observer = [[OCProgressObserver alloc] init];
+        [observer startObservingProgress:progress];
+
+        progress.completedLessons = 8;
+        progress.totalLessons = 20;
+        progress.name = @"Runtime Learning";
+
+        // 5. 移除观察并验证不再回调
+        [observer stopObserving];
+        progress.completedLessons = 9;
+
+        // 6. 线程实验前重新注册
+        [observer startObservingProgress:progress];
+
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+            progress.completedLessons = 10;
+            dispatch_semaphore_signal(semaphore);
+        });
+
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        [observer stopObserving];
+    }
+
+    return 0;
+}
 ```
 
-然后运行：
-
-```objc
-OCProgressObserver *observer = [[OCProgressObserver alloc] init];
-[observer startObservingProgress:progress];
-
-progress.completedLessons = 8;
-progress.totalLessons = 20;
-progress.name = @"Runtime Learning";
-
-[observer stopObserving];
-
-progress.completedLessons = 9;
-```
-
-预期：
+必须注意执行顺序：
 
 ```text
-注册 progress 时因为 Initial 立即收到一次当前值
-修改 completedLessons 后 progress 变化
-修改 totalLessons 后 progress 再次变化
-修改 name 后收到 name 变化
-stopObserving 后不再收到通知
-```
-
-依赖链：
-
-```text
-completedLessons ─┐
-                  ├── progress Getter 重新计算
-                  └── progress KVO 通知
-
-totalLessons ─────┘
-```
-
----
-
-## 练习 6：验证观察线程
-
-```objc
-dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
-    progress.completedLessons = 10;
-    dispatch_semaphore_signal(semaphore);
-});
-
-dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-```
-
-在回调日志中观察 `NSThread`。
-
-你会发现：
-
-```text
+stopObserving
+    ↓
+线程实验前重新 startObservingProgress:
+    ↓
 后台线程修改属性
-        ↓
-KVO 回调也在后台线程执行
+    ↓
+后台线程收到 KVO 回调
+    ↓
+实验结束再次 stopObserving
 ```
 
-在 iOS 页面里更新 UI 时应切回主线程：
+如果在 iOS 页面更新 UI，回调中应切换主线程：
 
 ```objc
 dispatch_async(dispatch_get_main_queue(), ^{
@@ -478,9 +413,42 @@ dispatch_async(dispatch_get_main_queue(), ^{
 
 ---
 
-## 练习 7：KVC 集合运算符
+## 4. 验证 NSNull 与基础数值
 
-创建多个进度模型：
+```objc
+NSDictionary<NSString *, id> *nullPayload = @{
+    @"name": [NSNull null],
+    @"completedLessons": [NSNull null]
+};
+
+[progress applyPayload:nullPayload];
+
+NSLog(@"name = %@", progress.name);
+NSLog(@"completed = %ld", (long)progress.completedLessons);
+```
+
+预期：
+
+```text
+name = nil
+completedLessons = 0
+```
+
+调用链：
+
+```text
+NSNull
+  ↓ normalize
+nil
+  ↓ setValue:forKey:
+setNilValueForKey:
+  ↓
+completedLessons = 0
+```
+
+---
+
+## 5. KVC 集合运算符
 
 ```objc
 OCStudyProgress *swift = [[OCStudyProgress alloc]
@@ -508,7 +476,6 @@ NSArray<OCStudyProgress *> *items = @[swift, objc, core];
 
 ```objc
 NSArray<NSString *> *names = [items valueForKey:@"name"];
-NSLog(@"names = %@", names);
 ```
 
 统计：
@@ -517,10 +484,6 @@ NSLog(@"names = %@", names);
 NSNumber *count = [items valueForKeyPath:@"@count"];
 NSNumber *average = [items valueForKeyPath:@"@avg.progress"];
 NSNumber *maximum = [items valueForKeyPath:@"@max.progress"];
-
-NSLog(@"count = %@", count);
-NSLog(@"average = %@", average);
-NSLog(@"maximum = %@", maximum);
 ```
 
 去重投影：
@@ -532,40 +495,7 @@ NSArray<NSString *> *uniqueNames =
 
 ---
 
-## 练习 8：观察未定义 Key
-
-错误调用：
-
-```objc
-[progress setValue:@"wrong" forKey:@"courseName"];
-```
-
-默认会触发 `NSUnknownKeyException`。
-
-练习要求：
-
-```text
-1. 不要直接在主流程中保留这段崩溃代码
-2. 使用断点观察异常调用栈
-3. 检查 Key 字符串和模型属性
-4. 思考为什么白名单比吞掉异常更可靠
-```
-
-可选：临时重写方法用于日志实验：
-
-```objc
-- (void)setValue:(id)value forUndefinedKey:(NSString *)key {
-    NSLog(@"undefined key: %@ value=%@", key, value);
-}
-```
-
-实验结束后恢复严格行为，避免未知字段被静默忽略。
-
----
-
-## 练习 9：观察关系切换
-
-创建两个对象：
+## 6. 观察关系切换
 
 ```objc
 OCStudyProgress *first = [[OCStudyProgress alloc]
@@ -579,17 +509,15 @@ OCStudyProgress *second = [[OCStudyProgress alloc]
     completedLessons:2
     totalLessons:10
     tags:@[]];
-```
 
-切换观察对象：
-
-```objc
 [observer startObservingProgress:first];
 first.completedLessons = 3;
 
 [observer startObservingProgress:second];
 first.completedLessons = 4;
 second.completedLessons = 5;
+
+[observer stopObserving];
 ```
 
 预期：
@@ -600,15 +528,42 @@ first 后续变化不再通知
 second 的变化继续通知
 ```
 
-这验证了 `startObservingProgress:` 中先调用 `stopObserving` 的必要性。
+---
+
+## 7. 未定义 Key 实验
+
+下面的代码默认会触发 `NSUnknownKeyException`：
+
+```objc
+[progress setValue:@"wrong" forKey:@"courseName"];
+```
+
+练习方式：
+
+```text
+1. 不要把崩溃代码保留在正常主流程
+2. 设置 All Objective-C Exceptions 断点
+3. 观察 valueForUndefinedKey: 或 setValue:forUndefinedKey:
+4. 检查 Key 拼写与模型属性
+```
+
+可临时重写用于实验：
+
+```objc
+- (void)setValue:(id)value forUndefinedKey:(NSString *)key {
+    NSLog(@"undefined key: %@ value=%@", key, value);
+}
+```
+
+实验结束后建议恢复严格行为，不要让未知字段被静默吞掉。
 
 ---
 
-## 进阶任务
+## 8. 进阶任务
 
-### 任务 1：增加状态文本
+### 任务 1：状态文本依赖
 
-添加只读属性：
+增加：
 
 ```objc
 @property (nonatomic, copy, readonly) NSString *statusText;
@@ -622,17 +577,17 @@ progress == 0       未开始
 progress >= 1       已完成
 ```
 
-然后声明：
+实现：
 
 ```objc
 + (NSSet<NSString *> *)keyPathsForValuesAffectingStatusText;
 ```
 
-让 `statusText` 依赖 `progress`，并观察它的变化。
+并观察 `statusText`。
 
-### 任务 2：增加安全更新方法
+### 任务 2：安全推进课程
 
-添加：
+增加：
 
 ```objc
 - (void)completeNextLesson;
@@ -643,12 +598,12 @@ progress >= 1       已完成
 ```text
 completedLessons 不超过 totalLessons
 统一通过 Setter 修改
-确保 progress KVO 正常触发
+progress KVO 正常触发
 ```
 
-### 任务 3：加入集合代理
+### 任务 3：集合代理
 
-将 `tags` 改为可变集合，并通过：
+把标签存储改为可变集合，并通过：
 
 ```objc
 NSMutableArray *proxy = [progress mutableArrayValueForKey:@"tags"];
@@ -656,15 +611,18 @@ NSMutableArray *proxy = [progress mutableArrayValueForKey:@"tags"];
 
 增加和删除标签，观察集合变化通知。
 
-### 任务 4：封装观察器状态
+### 任务 4：Payload 错误数据
 
-增加断言或日志，确保：
+分别传入：
 
 ```text
-不能重复注册同一对象
-没有注册时 stopObserving 不执行 remove
-切换对象时旧关系先解除
+name = NSNumber
+totalLessons = NSString
+tags = NSDictionary
+未知 Key
 ```
+
+确认模型不会被错误类型污染。
 
 ---
 
@@ -685,18 +643,18 @@ NSMutableArray *proxy = [progress mutableArrayValueForKey:@"tags"];
 10. KVC 集合运算符适合处理什么统计？
 ```
 
-建议重点调试以下链路：
+建议重点调试：
 
 ```text
 setCompletedLessons:
         ↓
 依赖 Key progress
         ↓
-KVO Setter 拦截与通知
+KVO 通知
         ↓
 observeValueForKeyPath:
         ↓
 change old / new
 ```
 
-下一章进入 Runtime 后，可以继续解释 KVO 动态派生类和消息发送机制。
+下一章进入 Runtime 后，可以继续解释 KVO 的动态派生类、消息发送和方法替换机制。
